@@ -1,0 +1,36 @@
+name: "Check"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  configuration:
+    name: "Configuration"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Compile TypeScript sources
+        uses: ./.github/actions/build
+
+      - name: Run checks
+        run: npm run check
+
+      - name: Write PR number
+        run: echo "${{ github.event.number }}" >> ./config/pr.yaml
+
+      - name: Calculate diff
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          git diff origin/main ./config/groups.yaml >> ./config/main.diff
+          cat ./config/main.diff
+
+      - name: Upload configuration as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: groups.yaml
+          path: ./config/*

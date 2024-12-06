@@ -1,0 +1,148 @@
+name: "Prototype Groups"
+on:
+  workflow_dispatch:
+    inputs:
+      workflow_id:
+        required: true
+        type: number
+      post_comment:
+        required: false
+        type: boolean
+        default: true
+  workflow_run:
+    workflows: ["Check"]
+    types:
+      - completed
+
+jobs:
+  validate:
+    name: "Validate"
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'workflow_dispatch'
+
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+      pull-requests: write
+
+    concurrency:
+      group: "validate"
+      cancel-in-progress: false
+
+    steps:
+      - name: Get commit info
+        id: commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA=$(gh run view ${{ inputs.workflow_id || github.event.workflow_run.id }} --repo ${{ github.repository }} --json headSha | jq -r '.headSha')
+          echo "SHA=$SHA" >> $GITHUB_OUTPUT
+
+      - name: Get token for sepp-bot
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.SEPP_BOT_ID }}
+          private-key: ${{ secrets.SEPP_BOT_PK }}
+
+      - name: Register workflow for PR
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh api --method POST /repos/uob-sepp/groups-2024/statuses/${{ steps.commit.outputs.SHA }} \
+            -f state='pending' \
+            -f target_url='${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
+            -f description='Validating changes to groups...' \
+            -f context='Validate / Groups'
+
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Compile TypeScript sources
+        uses: ./.github/actions/build
+
+      - name: Download PR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: groups.yaml
+          path: ./pr/
+          run-id: ${{ inputs.workflow_id || github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get PR info
+        id: pr
+        run: |
+          NUMBER=$(cat ./pr/pr.yaml)
+          echo "NUMBER=$NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Apply PR diff
+        run: |
+          cat ./pr/main.diff
+          git apply ./pr/main.diff
+
+      - name: Check that PR is mergeable
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          STATUS=$(gh pr view ${{ steps.pr.outputs.NUMBER }} --json mergeable | jq -r ".mergeable")
+
+          if [[ "$STATUS" == "CONFLICTING" ]]; then
+            echo "PR branch is not up-to-date, updating..."
+            git checkout .
+            gh pr update-branch ${{ steps.pr.outputs.NUMBER }} --rebase
+            exit 1
+          fi
+
+      - name: Validate configuration
+        run: npm run validate
+        env:
+          CANVAS_TOKEN: ${{ secrets.CANVAS_TOKEN }}
+
+      - name: "Post changes as PR comment"
+        uses: actions/github-script@v6
+        if: github.event_name == 'workflow_run' || inputs.post_comment
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            let fs = require('fs');
+            let markdown = 'changes.md';
+            let issue_number = ${{ steps.pr.outputs.NUMBER }};
+
+            if (fs.existsSync(markdown)) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue_number,
+                body: fs.readFileSync('changes.md', 'utf-8')
+              });
+            }
+
+      - name: Upload change artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: changes.json
+          path: changes.json
+
+      - name: Set workflow status as 'success'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh api --method POST /repos/uob-sepp/groups-2024/statuses/${{ steps.commit.outputs.SHA }} \
+            -f state='success' \
+            -f target_url='${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
+            -f description='Successful' \
+            -f context='Validate / Groups'
+
+      - name: Set workflow status as 'failure'
+        if: failure()
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh api --method POST /repos/uob-sepp/groups-2024/statuses/${{ steps.commit.outputs.SHA }} \
+            -f state='failure' \
+            -f target_url='${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
+            -f description='Failed' \
+            -f context='Validate / Groups'
