@@ -1,0 +1,7 @@
+# Ignore Google Drive pointer files
+*.gdoc
+*.gslides
+*.gsheet
+
+# Ignore macOS junk
+.DS_Store
