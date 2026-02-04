@@ -5,3 +5,9 @@
 
 # Ignore macOS junk
 .DS_Store
+
+# Common clutter
+*.tmp
+*.bak
+*.swp
+~$*.docx
