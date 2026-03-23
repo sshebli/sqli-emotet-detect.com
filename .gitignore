@@ -1,13 +1,27 @@
-# Ignore Google Drive pointer files
-*.gdoc
-*.gslides
-*.gsheet
+# Virtual environments
+.venv/
+venv/
 
-# Ignore macOS junk
+# Python cache
+__pycache__/
+*.py[cod]
+
+# macOS
 .DS_Store
 
-# Common clutter
-*.tmp
-*.bak
-*.swp
-~$*.docx
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment / local config
+.env
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# Temporarily ignore datasets
+data/

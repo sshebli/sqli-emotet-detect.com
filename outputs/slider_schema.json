@@ -1,0 +1,65 @@
+[
+  {
+    "feature": "Sentence Length",
+    "min": 5.0,
+    "max": 223.0,
+    "default": 48.0,
+    "step": 1
+  },
+  {
+    "feature": "AND Count",
+    "min": 0.0,
+    "max": 1.0,
+    "default": 0.0,
+    "step": 1
+  },
+  {
+    "feature": "OR Count",
+    "min": 0.0,
+    "max": 1.0,
+    "default": 0.0,
+    "step": 1
+  },
+  {
+    "feature": "UNION Count",
+    "min": 0.0,
+    "max": 1.0,
+    "default": 0.0,
+    "step": 1
+  },
+  {
+    "feature": "Single Quote Count",
+    "min": 0.0,
+    "max": 4.0,
+    "default": 0.0,
+    "step": 1
+  },
+  {
+    "feature": "Double Quote Count",
+    "min": 0.0,
+    "max": 2.0,
+    "default": 0.0,
+    "step": 1
+  },
+  {
+    "feature": "Constant Value Count",
+    "min": 0.0,
+    "max": 9.0,
+    "default": 1.0,
+    "step": 1
+  },
+  {
+    "feature": "Parentheses Count",
+    "min": 0.0,
+    "max": 17.0,
+    "default": 0.0,
+    "step": 1
+  },
+  {
+    "feature": "Special Characters Total",
+    "min": 0.0,
+    "max": 6.0,
+    "default": 0.0,
+    "step": 1
+  }
+]

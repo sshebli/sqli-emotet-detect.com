@@ -1,0 +1,2 @@
+model_file,data_file,n_samples,n_features,accuracy,precision,recall,f1,roc_auc
+rf_sqli.joblib,updated_file.csv,30919,9,0.9955043824185775,0.9946326440827101,0.9931470743278862,0.9938893040840551,0.9995511245228641
