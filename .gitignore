@@ -22,3 +22,6 @@ dist/
 
 # Logs
 *.log
+
+# Ignore large baseline PCAPs
+data/emotet/pcap/2017-*.pcap
