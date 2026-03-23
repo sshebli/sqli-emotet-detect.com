@@ -1,0 +1,11 @@
+name: "Compile TypeScript sources"
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+
+    - name: Build TypeScript code
+      shell: bash
+      run: npm run build
