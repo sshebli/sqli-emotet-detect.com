@@ -108,7 +108,7 @@ def render_home_tab(
                     importance=importance,
                 )
 
-        render_sqli_feature_explanations()
+        render_sqli_feature_explanations("sqli_feature_explain_box_main")
         render_sqli_feature_importance_section(importance)
         return
 
@@ -203,7 +203,9 @@ def render_unified_tab(
             )
 
     mode = st.session_state.get("unified_mode", "SQLi-style")
-    if mode == "Emotet-style":
+    if mode == "SQLi-style":
+        render_sqli_feature_explanations("sqli_feature_explain_box_unified")
+    elif mode == "Emotet-style":
         render_emotet_feature_explanations()
 
 

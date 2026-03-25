@@ -92,7 +92,7 @@ def render_sqli_prediction_panel(
 
         st.write(f"**Decision (threshold = {threshold:.2f}):** `{decision}`")
 
-        st.subheader("Top global features (training)")
+        st.subheader("Top Global Features (Training)")
         if importance is not None:
             top3 = importance.head(3).copy()
             top3["importance"] = top3["importance"].round(4)

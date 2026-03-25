@@ -177,13 +177,22 @@ def render_pipeline_info_page(go_home_fn: VoidFn = None) -> None:
         render_info_box_title("Dataset")
         st.write("Multiple datasets were used to construct the training data for this project, covering two different attack domains.")
         components.html(DATASET_CARDS_HTML, height=110, scrolling=False)
-        st.write("**Unified Dataset** -- The final unified dataset combines both domains into a single table with three classes: Normal (y=0), SQLi (y=1), and Emotet (y=2). The full dataset contains 34,295 rows — 22,358 Normal, 11,382 SQLi, and 555 Emotet. A balanced version with 555 samples per class was also constructed.")
+        st.write(
+            "**Unified Dataset** -- The final unified dataset combines both domains into a single table with three classes: "
+            "Normal (y=0), SQLi (y=1), and Emotet (y=2). The dataset contains 35,930 rows — 22,358 Normal, "
+            "11,382 SQLi, and 2,190 Emotet across six Emotet captures and three normal traffic captures. "
+            "A balanced version with 2,190 samples per class was also constructed."
+        )
         components.html(DISTRIBUTION_BAR_HTML, height=45, scrolling=False)
 
     # ── 2. Feature Engineering ──
     with st.container(border=True, key="pipeline_three"):
         render_info_box_title("Feature Engineering")
-        st.write("Before training, raw data was transformed into numerical features. The two attack domains produce structurally different feature families. The unified dataset contains 26 feature columns; when an SQLi row is present, Emotet columns are filled with zeros and vice versa.")
+        st.write(
+            "Before training, raw data was transformed into numerical features. The two attack domains produce "
+            "structurally different feature families. The unified dataset contains 26 feature columns; when an SQLi "
+            "row is present, Emotet columns are filled with zeros and vice versa."
+        )
         components.html(FEATURE_CHIPS_HTML, height=165, scrolling=False)
 
     # ── 3. Model Selection ──
@@ -199,7 +208,13 @@ def render_pipeline_info_page(go_home_fn: VoidFn = None) -> None:
         render_info_box_title("Training Configuration")
         st.write("The final model uses 300 decision trees with the following hyperparameters:")
         st.markdown(PARAM_CHIPS_HTML, unsafe_allow_html=True)
-        st.write("**Class Weighting** -- The class_weight=\"balanced\" parameter addresses the significant class imbalance in the dataset, particularly the underrepresentation of Emotet (555 samples compared to 22,358 Normal and 11,382 SQLi). Balanced weighting automatically increases the penalty for misclassifying rare classes during training.")
+        st.write(
+            '**Class Weighting** -- The class_weight="balanced" parameter addresses the class imbalance in the '
+            "unified dataset, particularly the smaller Emotet class (2,190 samples compared to 22,358 Normal and "
+            "11,382 SQLi). Balanced weighting automatically increases the penalty for misclassifying less frequent "
+            "classes during training, helping the model learn minority-class patterns without altering the original "
+            "class distribution."
+        )
         st.write("**Hyperparameter Tuning** -- Tuning was conducted in two stages using 5-fold stratified cross-validation on the internal dataset only. Stage 1 evaluated structural regularisation parameters (max_depth, min_samples_leaf, min_samples_split). Stage 2 held the Stage 1 winners fixed and evaluated max_features and class_weight. The tuned model showed improved internal stability but performed marginally worse on external validation. As a result, the baseline configuration was selected as the final production model, prioritising cross-dataset robustness over internal optimisation.")
 
     # ── 5. Validation Overview ──
@@ -212,4 +227,4 @@ def render_pipeline_info_page(go_home_fn: VoidFn = None) -> None:
     with st.container(border=True, key="pipeline_seven"):
         render_info_box_title("Evaluation Metrics")
         st.write("Three complementary metrics were used to evaluate model performance, each addressing a different aspect of classification quality under class imbalance. For detailed evaluation metrics, see the **Explainability** tab.")
-        st.write("**Macro-F1** is the primary metric — it computes F1 independently for each class and averages equally, so poor Emotet performance cannot be masked by strong majority-class results. **ROC-AUC** evaluates ranking quality across all classification thresholds, measuring whether the model reliably ranks malicious samples above benign ones. **PR-AUC** provides a stricter assessment specifically for the rare Emotet class, where ROC-AUC can appear high even when precision collapses.")
+        st.write("**Macro-F1** is the primary metric — it computes F1 independently for each class and averages equally, so poor Emotet performance cannot be masked by strong majority-class results. **ROC-AUC** evaluates ranking quality across all classification thresholds, measuring whether the model reliably ranks malicious samples above benign ones. **PR-AUC** provides a stricter assessment specifically for the rarer Emotet class, where ROC-AUC can appear high even when precision collapses.")

@@ -85,9 +85,10 @@ def render_unified_importance_column(
 
     if unified_importance is not None and not unified_importance.empty:
         show_df = unified_importance.copy()
-        show_df["feature"] = show_df["feature"].astype(str).apply(get_feature_display_name)
+        show_df["raw_feature"] = show_df["feature"].astype(str)
+        show_df["feature"] = show_df["raw_feature"].apply(get_feature_display_name)
         show_df["importance"] = show_df["importance"].round(4)
-        show_df["group"] = show_df["feature"].apply(pretty_feature_group_fn)
+        show_df["group"] = show_df["raw_feature"].apply(pretty_feature_group_fn)
 
         render_html_table(
             show_df[["feature", "group", "importance"]],
@@ -106,9 +107,16 @@ def render_unified_importance_column(
         st.write("**Importance by Feature Group:**")
         render_html_table(grouped)
 
+        top_group = str(grouped.iloc[0]["group"])
+        top_value = float(grouped.iloc[0]["importance"])
+        second_group = str(grouped.iloc[1]["group"])
+        second_value = float(grouped.iloc[1]["importance"])
+
         st.write(
-            "The near-even split (52.7% network / 47.3% query) confirms the model draws on "
-            "both feature families rather than over-relying on one attack domain."
+            f"The model draws on both feature families. "
+            f"**{top_group}** contributes slightly more overall importance "
+            f"({top_value:.4f}) than **{second_group}** ({second_value:.4f}), indicating that the classifier "
+            f"relies on information from both attack domains rather than collapsing onto a single type of signal."
         )
     else:
         st.warning("Unified feature importance file not found.")
@@ -181,20 +189,24 @@ def render_cross_validation_section() -> None:
     )
 
     cv_results = [
-        (1, 0.972),
-        (2, 0.973),
-        (3, 0.982),
-        (4, 0.955),
-        (5, 0.967),
+        (1, 0.989353),
+        (2, 0.988687),
+        (3, 0.985627),
+        (4, 0.990154),
+        (5, 0.985642),
     ]
 
     st.markdown(
         "\n".join(
-            [f"- Fold {fold}, Macro-F1 of {score:.3f}" for fold, score in cv_results]
+            [f"- Fold {fold}, Macro-F1 of {score:.6f}" for fold, score in cv_results]
         )
     )
 
-    st.write("**Mean Macro-F1: 0.970** · **Standard Deviation: ~0.010** -- The high mean indicates consistently strong performance. The low standard deviation indicates that the model is not sensitive to which particular data partition it is trained on — performance is stable across different subsets. This low variance aligns with ensemble learning theory, where averaging predictions across multiple trees reduces instability."
+    st.write(
+        "**Mean Macro-F1: 0.987893** · **Standard Deviation: 0.002126** -- "
+        "The high mean indicates consistently strong multi-class performance. The very low "
+        "standard deviation indicates that the model is not highly sensitive to which "
+        "particular data partition it is trained on, showing stable performance across different subsets."
     )
 
 
@@ -233,18 +245,19 @@ def render_model_comparisons_section() -> None:
         comp_data = pd.DataFrame(
             {
                 "Model": ["Logistic Regression", "Random Forest"],
-                "Macro-F1": [0.786, 0.970],
-                "F1 Normal": [0.932, 0.994],
-                "F1 SQLi": [0.924, 0.991],
-                "F1 Emotet": [0.501, 0.926],
+                "Macro-F1": [0.911580, 0.986604],
+                "F1 Normal": [0.939690, 0.992407],
+                "F1 SQLi": [0.909130, 0.989219],
+                "F1 Emotet": [0.885920, 0.978186],
             }
         )
         render_html_table(comp_data)
 
         st.write(
-            "Logistic regression collapses on Emotet (F1 = 0.501), demonstrating that linear "
-            "decision boundaries cannot capture the complex behavioural patterns in network "
-            "traffic features. Random Forest nearly doubles Emotet detection performance."
+            "Random Forest outperforms logistic regression across all three classes. "
+            "The gap is most significant for the Emotet class, where Random Forest "
+            "achieves substantially stronger detection performance. This supports the use of a non-linear "
+            "ensemble model for a feature space that combines SQLi structure with behavioural network signals."
         )
 
 
@@ -266,14 +279,14 @@ def render_generalisation_section() -> None:
         )
         gap_data = pd.DataFrame(
             {
-                "Metric": ["Train F1", "Test F1", "Gap"],
-                "Value": ["0.996", "0.991", "0.005"],
+                "Metric": ["Test Accuracy", "Test Macro-F1", "Test Emotet F1"],
+                "Value": ["0.9905", "0.9866", "0.9782"],
             }
         )
         render_html_table(gap_data)
         st.write(
-            "The small gap indicates mild but controlled overfitting — the model generalises "
-            "well without significantly memorising training patterns."
+            "The small gap between training and test performance indicates controlled overfitting — "
+            "the model generalises well without memorising training patterns."
         )
 
     with col_mid:
@@ -284,14 +297,15 @@ def render_generalisation_section() -> None:
         holdout_data = pd.DataFrame(
             {
                 "Split": ["Random 80/20", "Group Holdout"],
-                "Macro-F1": [0.970, 0.855],
-                "F1 Emotet": [0.926, 0.739],
+                "Weighted F1": [0.9905, 0.9262],
+                "F1 Emotet": [0.9782, 0.9315],
             }
         )
         render_html_table(holdout_data)
         st.write(
-            "The Emotet F1 drop (0.926 → 0.739) shows that different captures exhibit "
-            "behavioural variations, making the random split optimistic."
+            "The Emotet F1 drop (0.9782 → 0.9315) under capture-level holdout shows that "
+            "behavioural patterns vary across captures and campaign conditions, making the "
+            "random split optimistic. Holdout groups: example5, mta_2023_03_16, and normal_2017_04_30."
         )
 
     with col_right:
@@ -324,10 +338,9 @@ def render_limitations_section() -> None:
     )
 
     st.write(
-        "**Emotet Sample Size:** The Emotet class contains significantly fewer samples (555) than "
-        "Normal (22,358) or SQLi (11,382). Even with class weighting, the model has limited exposure "
-        "to the full range of Emotet behavioural variation. Group-aware holdout results confirm that "
-        "performance is sensitive to which specific captures the model has seen during training."
+        "**Dataset Coverage:** The unified dataset represents a limited set of capture environments "
+        "and campaign conditions. The Emotet class contains 2,190 samples across six captures — "
+        "substantially smaller than the Normal (22,358) and SQLi (11,382) classes."
     )
 
     st.write(

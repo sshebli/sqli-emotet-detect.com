@@ -19,11 +19,11 @@ from templates.prediction_panels import (
 )
 
 
-def render_sqli_feature_explanations():
+def render_sqli_feature_explanations(container_key: str = "sqli_feature_explain_box"):
     from templates.helpers import render_feature_explanation_html, SQLI_FEATURE_EXPLANATIONS
     import streamlit as st
 
-    with st.container(border=True, key="sqli_feature_explain_box"):
+    with st.container(border=True, key=container_key):
         st.markdown(
             '<h3 class="info-box-title">Feature Descriptions</h3>',
             unsafe_allow_html=True,

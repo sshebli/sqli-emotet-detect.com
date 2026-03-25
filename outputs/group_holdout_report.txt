@@ -1,0 +1,31 @@
+Holdout groups: ['example5', 'mta_2023_03_16', 'normal_2017_04_30']
+Train rows: 32749
+Test rows: 3181
+
+Test group distribution:
+group_id
+mta_2023_03_16       1635
+normal_2017_04_30    1351
+example5              195
+
+Test class distribution:
+y
+0    1351
+2    1830
+
+              precision    recall  f1-score   support
+
+      Normal     0.8562    0.9919    0.9191      1351
+        SQLi     0.0000    0.0000    0.0000         0
+      Emotet     0.9932    0.8770    0.9315      1830
+
+    accuracy                         0.9258      3181
+   macro avg     0.6165    0.6230    0.6169      3181
+weighted avg     0.9350    0.9258    0.9262      3181
+
+Macro F1  : 0.6169
+F1 Normal : 0.9191
+F1 SQLi   : 0.0000
+F1 Emotet : 0.9315
+
+Note: SQLi support may be zero in this holdout if no SQLi source group is included in the test split.

@@ -1,0 +1,2 @@
+Split,Holdout_Groups,Train_Rows,Test_Rows,Support_Normal,Support_SQLi,Support_Emotet,Macro_F1,F1_Normal,F1_SQLi,F1_Emotet
+Group Holdout,"['example5', 'mta_2023_03_16', 'normal_2017_04_30']",32749,3181,1351,0,1830,0.6169,0.9191,0.0,0.9315

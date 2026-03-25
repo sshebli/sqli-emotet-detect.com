@@ -1,3 +1,0 @@
-Split,Macro_F1,F1_Normal(y=0),F1_SQLi(y=1),F1_Emotet(y=2),Support_Normal,Support_SQLi,Support_Emotet
-Random Stratified 80/20,0.970291,0.993747,0.991201,0.925926,4472,2276,111
-Group Holdout: example4 + normal_2017_04_30,0.854604,0.970354,N/A,0.738854,1351,0,189

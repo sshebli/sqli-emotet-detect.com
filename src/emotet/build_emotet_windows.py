@@ -12,6 +12,7 @@ LOGSETS = [
     ("example3", "data/emotet/zeek_logs/example3/conn.log", "10.1.4.205", 2),
     ("example4", "data/emotet/zeek_logs/example4/conn.log", "172.16.1.101", 2),
     ("example5", "data/emotet/zeek_logs/example5/conn.log", "192.168.100.101", 2),
+    ("mta_2023_03_16", "data/emotet/zeek_logs/mta_2023_03_16/conn.log", "10.3.16.101", 2),
 
 
     # Clean (Stratosphere Normal captures)
