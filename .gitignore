@@ -23,3 +23,5 @@ dist/
 
 # Logs
 *.log
+
+data/zenodo_raw.csv
