@@ -43,7 +43,6 @@ def render_sqli_info_page(go_home_fn: VoidFn, go_page_fn: HomePageFn) -> None:
         with button_col:
             if st.button("Test out SQLi Model Here", key="sqli_model_cta", use_container_width=False):
                 go_page_fn("sqli_model")
-                st.rerun()
 
     with st.container(border=True, key="sqli_def_box"):
         render_info_box_title("Definition")

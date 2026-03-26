@@ -26,6 +26,42 @@ from templates.dashboard_config import (
 )
 
 
+VALID_HOME_PAGES = {
+    "home",
+    "sqli",
+    "sqli_model",
+    "emotet",
+    "relationship",
+    "pipeline",
+}
+
+
+def _normalize_query_value(value, default: str) -> str:
+    if value is None:
+        return default
+
+    if isinstance(value, (list, tuple)):
+        if not value:
+            return default
+        value = value[0]
+
+    value = str(value).strip()
+    return value or default
+
+
+def _get_requested_home_page() -> str:
+    requested_page = _normalize_query_value(st.query_params.get("page", "home"), "home")
+    if requested_page not in VALID_HOME_PAGES:
+        return "home"
+    return requested_page
+
+
+def _set_home_page_state(page: str) -> None:
+    target_page = page if page in VALID_HOME_PAGES else "home"
+    st.session_state["home_page"] = target_page
+    st.query_params["page"] = target_page
+
+
 def inject_home_card_assets() -> None:
     css_variables = []
 
@@ -118,6 +154,7 @@ def inject_tab_persistence(active_tab_key: str) -> None:
         width=0,
     )
 
+
 @st.cache_resource
 def load_model():
     bundle = joblib.load(MODEL_PATH)
@@ -160,9 +197,13 @@ def initialize_session_state(defaults: dict) -> None:
     st.session_state.setdefault("unified_presets_initialized", False)
     st.session_state.setdefault("threshold", 0.5)
 
-    params = st.query_params
-    stored_page = params.get("page", "home")
-    st.session_state.setdefault("home_page", stored_page)
+    requested_page = _get_requested_home_page()
+    current_page = st.session_state.get("home_page")
+
+    if current_page not in VALID_HOME_PAGES:
+        st.session_state["home_page"] = requested_page
+    elif current_page != requested_page:
+        st.session_state["home_page"] = requested_page
 
     for feat, val in defaults.items():
         st.session_state.setdefault(f"feat_{feat}", float(val))
@@ -215,13 +256,11 @@ def reset_unified_defaults(defaults: dict, SQLI_FEATURES) -> None:
 
 
 def go_home() -> None:
-    st.session_state.home_page = "home"
-    st.query_params["page"] = "home"
+    _set_home_page_state("home")
 
 
 def go_page(page: str) -> None:
-    st.session_state.home_page = page
-    st.query_params["page"] = page
+    _set_home_page_state(page)
 
 
 def ensure_unified_presets_initialized(defaults: dict, SQLI_FEATURES) -> None:
