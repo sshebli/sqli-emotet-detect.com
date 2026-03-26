@@ -60,6 +60,8 @@ def inject_tab_persistence(active_tab_key: str) -> None:
         (function() {{
             const KEYS = {keys_json};
             const ACTIVE = {active_json};
+            const MAX_RETRIES = 20;
+            const RETRY_MS = 150;
 
             function setUrlTab(key) {{
                 const url = new URL(window.parent.location.href);
@@ -100,24 +102,25 @@ def inject_tab_persistence(active_tab_key: str) -> None:
                     if (!isSelected) {{
                         btns[idx].dataset.tabRestored = "true";
                         btns[idx].click();
+                        return true;
                     }}
+                    return true;
+                }}
+                return false;
+            }}
+
+            function initWithRetry(attempt) {{
+                attachListeners();
+                const restored = restoreActiveTab();
+                if (!restored && attempt < MAX_RETRIES) {{
+                    setTimeout(() => initWithRetry(attempt + 1), RETRY_MS);
                 }}
             }}
 
-            function init() {{
-                attachListeners();
-                restoreActiveTab();
-            }}
+            initWithRetry(0);
 
-            init();
-
-            let restored = false;
             const observer = new MutationObserver(() => {{
                 attachListeners();
-                if (!restored) {{
-                    restoreActiveTab();
-                    restored = true;
-                }}
             }});
 
             observer.observe(window.parent.document.body, {{
