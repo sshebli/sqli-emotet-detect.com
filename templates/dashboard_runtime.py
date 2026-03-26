@@ -6,6 +6,7 @@ from textwrap import dedent
 import joblib
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 from templates.dashboard_config import (
     EMOTET_DEMO_PRESET,
@@ -23,14 +24,6 @@ from templates.dashboard_config import (
     UNIFIED_IMPORTANCE_PATH,
     UNIFIED_MODEL_PATH,
 )
-
-VALID_HOME_PAGES = {
-    "home",
-    "sqli",
-    "sqli_model",
-    "emotet",
-    "relationship",
-}
 
 
 def inject_home_card_assets() -> None:
@@ -58,10 +51,134 @@ def inject_home_card_assets() -> None:
 
 
 def inject_tab_persistence(active_tab_key: str) -> None:
-    # Kept as a no-op so existing imports/calls do not break.
-    # Top-level tab persistence is now handled server-side via set_active_tab().
-    return None
+    keys_json = json.dumps(TAB_KEYS)
+    active_json = json.dumps(active_tab_key)
 
+    components.html(
+        f"""
+        <script>
+        (function() {{
+            const KEYS = {keys_json};
+            const ACTIVE_FROM_SERVER = {active_json};
+            const STORAGE_KEY = "dashboard_active_tab";
+            const MAX_RETRIES = 60;
+            const RETRY_MS = 120;
+
+            function safeParent() {{
+                return window.parent || window;
+            }}
+
+            function getUrl() {{
+                return new URL(safeParent().location.href);
+            }}
+
+            function setUrlTab(key) {{
+                const parentWin = safeParent();
+                const url = getUrl();
+                url.searchParams.set("tab", key);
+                parentWin.history.replaceState({{}}, "", url.toString());
+                try {{
+                    parentWin.localStorage.setItem(STORAGE_KEY, key);
+                }} catch (e) {{}}
+            }}
+
+            function getDesiredTab() {{
+                const url = getUrl();
+                const fromUrl = url.searchParams.get("tab");
+                if (fromUrl && KEYS.includes(fromUrl)) {{
+                    return fromUrl;
+                }}
+
+                try {{
+                    const fromStorage = safeParent().localStorage.getItem(STORAGE_KEY);
+                    if (fromStorage && KEYS.includes(fromStorage)) {{
+                        return fromStorage;
+                    }}
+                }} catch (e) {{}}
+
+                return ACTIVE_FROM_SERVER && KEYS.includes(ACTIVE_FROM_SERVER)
+                    ? ACTIVE_FROM_SERVER
+                    : "home";
+            }}
+
+            function getTabButtons() {{
+                return safeParent().document.querySelectorAll('button[data-baseweb="tab"]');
+            }}
+
+            function attachListeners() {{
+                const btns = getTabButtons();
+                if (!btns || !btns.length) return false;
+
+                btns.forEach((btn, i) => {{
+                    if (btn.__tabPersistPatched) return;
+                    btn.__tabPersistPatched = true;
+
+                    const key = KEYS[i] || "home";
+
+                    btn.addEventListener("click", () => {{
+                        setUrlTab(key);
+                    }});
+
+                    btn.addEventListener("keydown", (event) => {{
+                        if (event.key === "Enter" || event.key === " ") {{
+                            setUrlTab(key);
+                        }}
+                    }});
+                }});
+
+                return true;
+            }}
+
+            function restoreActiveTab() {{
+                const btns = getTabButtons();
+                if (!btns || !btns.length) return false;
+
+                const desired = getDesiredTab();
+                const idx = KEYS.indexOf(desired);
+
+                if (idx < 0 || !btns[idx]) return false;
+
+                setUrlTab(desired);
+
+                if (btns[idx].getAttribute("aria-selected") !== "true") {{
+                    btns[idx].click();
+                }}
+
+                return true;
+            }}
+
+            function initWithRetry(attempt) {{
+                const attached = attachListeners();
+                const restored = restoreActiveTab();
+
+                if (attached && restored) return;
+
+                if (attempt < MAX_RETRIES) {{
+                    setTimeout(() => initWithRetry(attempt + 1), RETRY_MS);
+                }}
+            }}
+
+            const observer = new MutationObserver(() => {{
+                attachListeners();
+            }});
+
+            function startObserver() {{
+                const body = safeParent().document.body;
+                if (body) {{
+                    observer.observe(body, {{ childList: true, subtree: true }});
+                }}
+            }}
+
+            setTimeout(() => {{
+                startObserver();
+                initWithRetry(0);
+            }}, 100);
+        }})();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
 
 @st.cache_resource
 def load_model():
@@ -100,39 +217,14 @@ def load_unified_importance():
     return None
 
 
-def _get_valid_home_page(value: str) -> str:
-    return value if value in VALID_HOME_PAGES else "home"
-
-
-
-def _get_valid_tab_key(value: str) -> str:
-    return value if value in TAB_KEYS else "home"
-
-
-
-def sync_query_params() -> None:
-    current_page = _get_valid_home_page(st.session_state.get("home_page", "home"))
-    current_tab = _get_valid_tab_key(st.session_state.get("active_tab", "home"))
-    st.query_params["page"] = current_page
-    st.query_params["tab"] = current_tab
-
-
-
 def initialize_session_state(defaults: dict) -> None:
-    params = st.query_params
-
-    stored_page = _get_valid_home_page(params.get("page", "home"))
-    stored_tab = _get_valid_tab_key(params.get("tab", "home"))
-
     st.session_state.setdefault("unified_mode", "SQLi-style")
     st.session_state.setdefault("unified_presets_initialized", False)
     st.session_state.setdefault("threshold", 0.5)
-    st.session_state.setdefault("home_page", stored_page)
-    st.session_state.setdefault("active_tab", stored_tab)
 
-    # Refresh from URL on every rerun so deployed refresh always restores state.
-    st.session_state.home_page = stored_page
-    st.session_state.active_tab = stored_tab
+    params = st.query_params
+    stored_page = params.get("page", "home")
+    st.session_state.setdefault("home_page", stored_page)
 
     for feat, val in defaults.items():
         st.session_state.setdefault(f"feat_{feat}", float(val))
@@ -140,9 +232,6 @@ def initialize_session_state(defaults: dict) -> None:
 
     for feat, cfg in UNIFIED_EMOTET_CONFIG.items():
         st.session_state.setdefault(f"ufeat_{feat}", float(cfg["default"]))
-
-    sync_query_params()
-
 
 
 def apply_sqli_preset(SQLI_FEATURES, preset: dict) -> None:
@@ -152,7 +241,6 @@ def apply_sqli_preset(SQLI_FEATURES, preset: dict) -> None:
             st.session_state[f"ufeat_{feat}"] = float(preset[feat_key])
 
 
-
 def apply_emotet_preset(preset: dict) -> None:
     for feat, val in preset.items():
         state_key = f"ufeat_{feat}"
@@ -160,12 +248,10 @@ def apply_emotet_preset(preset: dict) -> None:
             st.session_state[state_key] = float(val)
 
 
-
 def reset_to_defaults(defaults: dict) -> None:
     st.session_state["threshold"] = 0.5
     for feat, val in defaults.items():
         st.session_state[f"feat_{feat}"] = float(val)
-
 
 
 def apply_unified_mode_presets(defaults: dict, SQLI_FEATURES) -> None:
@@ -186,36 +272,24 @@ def apply_unified_mode_presets(defaults: dict, SQLI_FEATURES) -> None:
         apply_emotet_preset(HYBRID_EMOTET_DEMO_PRESET)
 
 
-
 def reset_unified_defaults(defaults: dict, SQLI_FEATURES) -> None:
     apply_unified_mode_presets(defaults, SQLI_FEATURES)
 
 
-
 def go_home() -> None:
     st.session_state.home_page = "home"
-    sync_query_params()
-
+    st.query_params["page"] = "home"
 
 
 def go_page(page: str) -> None:
-    st.session_state.home_page = _get_valid_home_page(page)
-    st.session_state.active_tab = "home"
-    sync_query_params()
-
-
-
-def set_active_tab(tab_key: str) -> None:
-    st.session_state.active_tab = _get_valid_tab_key(tab_key)
-    sync_query_params()
-
+    st.session_state.home_page = page
+    st.query_params["page"] = page
 
 
 def ensure_unified_presets_initialized(defaults: dict, SQLI_FEATURES) -> None:
     if not st.session_state["unified_presets_initialized"]:
         apply_unified_mode_presets(defaults, SQLI_FEATURES)
         st.session_state["unified_presets_initialized"] = True
-
 
 
 def get_unified_prediction_panel_height(mode: str) -> int:

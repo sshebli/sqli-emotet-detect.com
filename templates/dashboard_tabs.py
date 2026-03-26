@@ -39,7 +39,6 @@ def render_page_title(title: str) -> None:
     )
 
 
-
 def render_home_tab(
     go_home,
     go_page,
@@ -120,11 +119,6 @@ def render_home_tab(
     if page == "relationship":
         render_relationship_info_page(go_home)
         return
-
-    render_home_intro()
-    render_home_card_grid(go_page)
-    render_home_about_sections()
-
 
 
 def render_unified_tab(
@@ -215,18 +209,6 @@ def render_unified_tab(
         render_emotet_feature_explanations()
 
 
-
-def _render_top_nav(TAB_NAMES, TAB_KEYS, active_tab_key, set_active_tab_fn) -> None:
-    cols = st.columns(len(TAB_NAMES), gap="small")
-    for col, tab_name, tab_key in zip(cols, TAB_NAMES, TAB_KEYS):
-        with col:
-            button_type = "primary" if tab_key == active_tab_key else "secondary"
-            if st.button(tab_name, key=f"top_tab_{tab_key}", use_container_width=True, type=button_type):
-                set_active_tab_fn(tab_key)
-                st.rerun()
-
-
-
 def render_main_tabs(
     TAB_NAMES,
     TAB_KEYS,
@@ -238,25 +220,27 @@ def render_main_tabs(
     unified_importance,
     pretty_feature_group_fn,
     go_home,
-    set_active_tab_fn,
 ):
-    inject_tab_persistence_fn(active_tab_key)
-    _render_top_nav(TAB_NAMES, TAB_KEYS, active_tab_key, set_active_tab_fn)
-    st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+    tabs = st.tabs(TAB_NAMES)
+    tab_home, tab_unified, tab_pipeline, tab_explain, tab_quiz = tabs
 
-    if active_tab_key == "home":
+    inject_tab_persistence_fn(active_tab_key)
+
+    with tab_home:
         render_home_tab_fn()
-    elif active_tab_key == "unified":
+
+    with tab_unified:
         render_unified_tab_fn()
-    elif active_tab_key == "pipeline":
-        render_pipeline_info_page(go_home)
-    elif active_tab_key == "explainability":
+
+    with tab_explain:
         render_explainability_tab(
             importance=importance,
             unified_importance=unified_importance,
             pretty_feature_group_fn=pretty_feature_group_fn,
         )
-    elif active_tab_key == "quiz":
+
+    with tab_pipeline:
+        render_pipeline_info_page(go_home)
+
+    with tab_quiz:
         render_quiz_tab()
-    else:
-        render_home_tab_fn()

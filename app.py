@@ -23,7 +23,6 @@ from templates.dashboard_runtime import (
     load_unified_model,
     reset_to_defaults,
     reset_unified_defaults,
-    set_active_tab,
 )
 from templates.dashboard_tabs import (
     render_home_tab,
@@ -66,24 +65,21 @@ EMOTET_FEATURES = [
 initialize_session_state(defaults)
 ensure_unified_presets_initialized(defaults, SQLI_FEATURES)
 
-active_tab_key = st.session_state.get("active_tab", "home")
-active_tab_key = active_tab_key if active_tab_key in TAB_KEYS else "home"
+requested_tab = st.query_params.get("tab", "home")
+active_tab_key = requested_tab if requested_tab in TAB_KEYS else "home"
 
 
 def _reset_to_defaults() -> None:
     reset_to_defaults(defaults)
 
 
-
 def _reset_unified_defaults() -> None:
     reset_unified_defaults(defaults, SQLI_FEATURES)
-
 
 
 def _apply_unified_mode_presets() -> None:
     from templates.dashboard_runtime import apply_unified_mode_presets
     apply_unified_mode_presets(defaults, SQLI_FEATURES)
-
 
 
 def _render_home_tab() -> None:
@@ -98,7 +94,6 @@ def _render_home_tab() -> None:
         model=model,
         importance=importance,
     )
-
 
 
 def _render_unified_tab() -> None:
@@ -131,5 +126,4 @@ render_main_tabs(
     unified_importance=unified_importance,
     pretty_feature_group_fn=pretty_feature_group,
     go_home=go_home,
-    set_active_tab_fn=set_active_tab,
 )
