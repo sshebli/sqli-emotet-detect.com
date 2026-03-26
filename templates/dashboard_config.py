@@ -109,5 +109,5 @@ HYBRID_EMOTET_DEMO_PRESET = {
     "e_unique_dst_port": 1.0,
 }
 
-TAB_NAMES = ["Home", "Unified Model", "Explainability", "ML Pipeline Content", "Quiz"]
-TAB_KEYS = ["home", "unified", "explainability", "pipeline", "quiz"]
+TAB_NAMES = ["Home", "Unified Model", "ML Pipeline Content", "Explainability", "Quiz"]
+TAB_KEYS = ["home", "unified", "pipeline", "explainability", "quiz"]

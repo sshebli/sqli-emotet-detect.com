@@ -222,7 +222,7 @@ def render_main_tabs(
     go_home,
 ):
     tabs = st.tabs(TAB_NAMES)
-    tab_home, tab_unified, tab_explain, tab_pipeline, tab_quiz = tabs
+    tab_home, tab_unified, tab_pipeline, tab_explain, tab_quiz = tabs
 
     inject_tab_persistence_fn(active_tab_key)
 
