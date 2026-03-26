@@ -111,9 +111,13 @@ def inject_tab_persistence(active_tab_key: str) -> None:
 
             init();
 
+            let restored = false;
             const observer = new MutationObserver(() => {{
                 attachListeners();
-                restoreActiveTab();
+                if (!restored) {{
+                    restoreActiveTab();
+                    restored = true;
+                }}
             }});
 
             observer.observe(window.parent.document.body, {{
@@ -126,7 +130,6 @@ def inject_tab_persistence(active_tab_key: str) -> None:
         height=0,
         width=0,
     )
-
 
 @st.cache_resource
 def load_model():
