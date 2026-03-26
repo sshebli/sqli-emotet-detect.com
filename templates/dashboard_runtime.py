@@ -54,23 +54,23 @@ def inject_tab_persistence(active_tab_key: str) -> None:
     keys_json = json.dumps(TAB_KEYS)
     active_json = json.dumps(active_tab_key)
 
-    components.html(
+    st.markdown(
         f"""
         <script>
         (function() {{
             const KEYS = {keys_json};
             const ACTIVE = {active_json};
-            const MAX_RETRIES = 20;
-            const RETRY_MS = 150;
+            const MAX_RETRIES = 30;
+            const RETRY_MS = 100;
 
             function setUrlTab(key) {{
-                const url = new URL(window.parent.location.href);
+                const url = new URL(window.location.href);
                 url.searchParams.set("tab", key);
-                window.parent.history.replaceState({{}}, "", url.toString());
+                window.history.replaceState({{}}, "", url.toString());
             }}
 
             function getTabButtons() {{
-                return window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
+                return document.querySelectorAll('button[data-baseweb="tab"]');
             }}
 
             function attachListeners() {{
@@ -83,11 +83,6 @@ def inject_tab_persistence(active_tab_key: str) -> None:
                         const key = KEYS[i] || "home";
                         setUrlTab(key);
                     }});
-
-                    btn.addEventListener("mousedown", () => {{
-                        const key = KEYS[i] || "home";
-                        setUrlTab(key);
-                    }});
                 }});
             }}
 
@@ -95,14 +90,8 @@ def inject_tab_persistence(active_tab_key: str) -> None:
                 const btns = getTabButtons();
                 const idx = KEYS.indexOf(ACTIVE);
                 if (idx >= 0 && btns[idx]) {{
-                    const isSelected =
-                        btns[idx].getAttribute("aria-selected") === "true" ||
-                        btns[idx].dataset.tabRestored === "true";
-
-                    if (!isSelected) {{
-                        btns[idx].dataset.tabRestored = "true";
+                    if (btns[idx].getAttribute("aria-selected") !== "true") {{
                         btns[idx].click();
-                        return true;
                     }}
                     return true;
                 }}
@@ -111,27 +100,21 @@ def inject_tab_persistence(active_tab_key: str) -> None:
 
             function initWithRetry(attempt) {{
                 attachListeners();
-                const restored = restoreActiveTab();
-                if (!restored && attempt < MAX_RETRIES) {{
+                if (restoreActiveTab()) return;
+                if (attempt < MAX_RETRIES) {{
                     setTimeout(() => initWithRetry(attempt + 1), RETRY_MS);
                 }}
             }}
 
-            initWithRetry(0);
-
-            const observer = new MutationObserver(() => {{
-                attachListeners();
-            }});
-
-            observer.observe(window.parent.document.body, {{
-                childList: true,
-                subtree: true
-            }});
+            if (ACTIVE !== "home") {{
+                initWithRetry(0);
+            }} else {{
+                setTimeout(attachListeners, 200);
+            }}
         }})();
         </script>
         """,
-        height=0,
-        width=0,
+        unsafe_allow_html=True,
     )
 
 @st.cache_resource
