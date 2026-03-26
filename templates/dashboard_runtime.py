@@ -26,42 +26,6 @@ from templates.dashboard_config import (
 )
 
 
-VALID_HOME_PAGES = {
-    "home",
-    "sqli",
-    "sqli_model",
-    "emotet",
-    "relationship",
-    "pipeline",
-}
-
-
-def _normalize_query_value(value, default: str) -> str:
-    if value is None:
-        return default
-
-    if isinstance(value, (list, tuple)):
-        if not value:
-            return default
-        value = value[0]
-
-    value = str(value).strip()
-    return value or default
-
-
-def _get_requested_home_page() -> str:
-    requested_page = _normalize_query_value(st.query_params.get("page", "home"), "home")
-    if requested_page not in VALID_HOME_PAGES:
-        return "home"
-    return requested_page
-
-
-def _set_home_page_state(page: str) -> None:
-    target_page = page if page in VALID_HOME_PAGES else "home"
-    st.session_state["home_page"] = target_page
-    st.query_params["page"] = target_page
-
-
 def inject_home_card_assets() -> None:
     css_variables = []
 
@@ -95,65 +59,126 @@ def inject_tab_persistence(active_tab_key: str) -> None:
         <script>
         (function() {{
             const KEYS = {keys_json};
-            const ACTIVE = {active_json};
-            const MAX_RETRIES = 30;
-            const RETRY_MS = 100;
+            const ACTIVE_FROM_SERVER = {active_json};
+            const STORAGE_KEY = "dashboard_active_tab";
+            const MAX_RETRIES = 60;
+            const RETRY_MS = 120;
+
+            function safeParent() {{
+                return window.parent || window;
+            }}
+
+            function getUrl() {{
+                return new URL(safeParent().location.href);
+            }}
 
             function setUrlTab(key) {{
-                const url = new URL(window.parent.location.href);
+                const parentWin = safeParent();
+                const url = getUrl();
                 url.searchParams.set("tab", key);
-                window.parent.history.replaceState({{}}, "", url.toString());
+                parentWin.history.replaceState({{}}, "", url.toString());
+                try {{
+                    parentWin.localStorage.setItem(STORAGE_KEY, key);
+                }} catch (e) {{}}
+            }}
+
+            function getDesiredTab() {{
+                const url = getUrl();
+                const fromUrl = url.searchParams.get("tab");
+                if (fromUrl && KEYS.includes(fromUrl)) {{
+                    return fromUrl;
+                }}
+
+                try {{
+                    const fromStorage = safeParent().localStorage.getItem(STORAGE_KEY);
+                    if (fromStorage && KEYS.includes(fromStorage)) {{
+                        return fromStorage;
+                    }}
+                }} catch (e) {{}}
+
+                return ACTIVE_FROM_SERVER && KEYS.includes(ACTIVE_FROM_SERVER)
+                    ? ACTIVE_FROM_SERVER
+                    : "home";
             }}
 
             function getTabButtons() {{
-                return window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
+                return safeParent().document.querySelectorAll('button[data-baseweb="tab"]');
             }}
 
             function attachListeners() {{
                 const btns = getTabButtons();
+                if (!btns || !btns.length) return false;
+
                 btns.forEach((btn, i) => {{
                     if (btn.__tabPersistPatched) return;
                     btn.__tabPersistPatched = true;
 
+                    const key = KEYS[i] || "home";
+
                     btn.addEventListener("click", () => {{
-                        const key = KEYS[i] || "home";
                         setUrlTab(key);
                     }});
+
+                    btn.addEventListener("keydown", (event) => {{
+                        if (event.key === "Enter" || event.key === " ") {{
+                            setUrlTab(key);
+                        }}
+                    }});
                 }});
+
+                return true;
             }}
 
             function restoreActiveTab() {{
                 const btns = getTabButtons();
-                const idx = KEYS.indexOf(ACTIVE);
-                if (idx >= 0 && btns[idx]) {{
-                    if (btns[idx].getAttribute("aria-selected") !== "true") {{
-                        btns[idx].click();
-                    }}
-                    return true;
+                if (!btns || !btns.length) return false;
+
+                const desired = getDesiredTab();
+                const idx = KEYS.indexOf(desired);
+
+                if (idx < 0 || !btns[idx]) return false;
+
+                setUrlTab(desired);
+
+                if (btns[idx].getAttribute("aria-selected") !== "true") {{
+                    btns[idx].click();
                 }}
-                return false;
+
+                return true;
             }}
 
             function initWithRetry(attempt) {{
-                attachListeners();
-                if (restoreActiveTab()) return;
+                const attached = attachListeners();
+                const restored = restoreActiveTab();
+
+                if (attached && restored) return;
+
                 if (attempt < MAX_RETRIES) {{
                     setTimeout(() => initWithRetry(attempt + 1), RETRY_MS);
                 }}
             }}
 
-            if (ACTIVE !== "home") {{
-                initWithRetry(0);
-            }} else {{
-                setTimeout(attachListeners, 200);
+            const observer = new MutationObserver(() => {{
+                attachListeners();
+            }});
+
+            function startObserver() {{
+                const body = safeParent().document.body;
+                if (body) {{
+                    observer.observe(body, {{ childList: true, subtree: true }});
+                }}
             }}
+
+            setTimeout(() => {{
+                startObserver();
+                initWithRetry(0);
+            }}, 100);
         }})();
         </script>
         """,
         height=0,
         width=0,
     )
-
 
 @st.cache_resource
 def load_model():
@@ -197,13 +222,9 @@ def initialize_session_state(defaults: dict) -> None:
     st.session_state.setdefault("unified_presets_initialized", False)
     st.session_state.setdefault("threshold", 0.5)
 
-    requested_page = _get_requested_home_page()
-    current_page = st.session_state.get("home_page")
-
-    if current_page not in VALID_HOME_PAGES:
-        st.session_state["home_page"] = requested_page
-    elif current_page != requested_page:
-        st.session_state["home_page"] = requested_page
+    params = st.query_params
+    stored_page = params.get("page", "home")
+    st.session_state.setdefault("home_page", stored_page)
 
     for feat, val in defaults.items():
         st.session_state.setdefault(f"feat_{feat}", float(val))
@@ -256,11 +277,13 @@ def reset_unified_defaults(defaults: dict, SQLI_FEATURES) -> None:
 
 
 def go_home() -> None:
-    _set_home_page_state("home")
+    st.session_state.home_page = "home"
+    st.query_params["page"] = "home"
 
 
 def go_page(page: str) -> None:
-    _set_home_page_state(page)
+    st.session_state.home_page = page
+    st.query_params["page"] = page
 
 
 def ensure_unified_presets_initialized(defaults: dict, SQLI_FEATURES) -> None:
