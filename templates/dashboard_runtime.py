@@ -54,7 +54,7 @@ def inject_tab_persistence(active_tab_key: str) -> None:
     keys_json = json.dumps(TAB_KEYS)
     active_json = json.dumps(active_tab_key)
 
-    st.markdown(
+    components.html(
         f"""
         <script>
         (function() {{
@@ -64,13 +64,13 @@ def inject_tab_persistence(active_tab_key: str) -> None:
             const RETRY_MS = 100;
 
             function setUrlTab(key) {{
-                const url = new URL(window.location.href);
+                const url = new URL(window.parent.location.href);
                 url.searchParams.set("tab", key);
-                window.history.replaceState({{}}, "", url.toString());
+                window.parent.history.replaceState({{}}, "", url.toString());
             }}
 
             function getTabButtons() {{
-                return document.querySelectorAll('button[data-baseweb="tab"]');
+                return window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
             }}
 
             function attachListeners() {{
@@ -114,7 +114,8 @@ def inject_tab_persistence(active_tab_key: str) -> None:
         }})();
         </script>
         """,
-        unsafe_allow_html=True,
+        height=0,
+        width=0,
     )
 
 @st.cache_resource
