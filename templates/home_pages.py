@@ -74,7 +74,7 @@ def render_home_intro() -> None:
         """
         <ul style="margin-top: -0.75rem; margin-bottom: 1rem; padding-left: 2rem; color: #5F6C73;">
             <li style="margin-bottom: 0.3rem;">
-                <strong>SQLi</strong> – explains what SQL injection is, how it works at the application layer, and how the model detects malicious query patterns using engineered payload features.
+                <strong>SQLi</strong> – explains what SQL injection is, how it works at the application layer, and how the model detects malicious query patterns using engineered payload features. The initial SQLi model before unifiying can also be explored and tested here. 
             </li>
             <li style="margin-bottom: 0.3rem;">
                 <strong>Emotet</strong> – introduces Emotet as a malware family, explains how it behaves at the network level, and describes the behavioural features extracted from network traffic captures used to detect infected hosts.

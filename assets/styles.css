@@ -459,6 +459,8 @@ table * {
 .st-key-explain_gap_box,
 .st-key-explain_generalisation_box,
 .st-key-sqli_feature_explain_box,
+.st-key-sqli_feature_explain_box_main,
+.st-key-sqli_feature_explain_box_unified,
 .st-key-sqli_importance_section_box,
 .st-key-explain_limitations_box,
 .st-key-emotet_feature_explain_box,
