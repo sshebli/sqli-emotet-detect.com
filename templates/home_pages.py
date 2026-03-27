@@ -139,7 +139,7 @@ def render_home_about_sections() -> None:
             )
 
     with col2:
-        with st.container(border=True, key="about_overview_box", height=310):
+        with st.container(border=True, key="about_overview_box", height=290):
             render_info_box_title("Project Overview")
             st.write(
                 "The system was developed in two phases: a binary SQLi classifier as a baseline, "
@@ -151,7 +151,7 @@ def render_home_about_sections() -> None:
             )
 
     with col3:
-        with st.container(border=True, key="about_objective_box", height=310):
+        with st.container(border=True, key="about_objective_box", height=290):
             render_info_box_title("Research Objective")
             st.write(
                 "To design, implement, and evaluate an end-to-end machine learning pipeline for "
@@ -162,7 +162,7 @@ def render_home_about_sections() -> None:
             )
 
     with col4:
-        with st.container(border=True, key="about_problem_box", height=310):
+        with st.container(border=True, key="about_problem_box", height=290):
             render_info_box_title("Problem Statement")
             st.write(
                 "Real-world attacks frequently combine techniques across layers: an attacker may "
