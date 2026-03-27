@@ -1,8 +1,3 @@
-# templates/html_blocks.py
-# All inline HTML/CSS blocks used by info_pages.py via components.html().
-# Kept separate to keep the layout file clean and readable.
-
-# ─── Shared base reset injected at the top of every block ───
 _BASE = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}

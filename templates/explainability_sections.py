@@ -88,13 +88,10 @@ def render_unified_importance_column(
         # Keep raw feature names so grouping still works correctly.
         show_df["raw_feature"] = show_df["feature"].astype(str)
 
-        # User-friendly display names
         show_df["feature"] = show_df["raw_feature"].apply(get_feature_display_name)
 
-        # User-friendly feature-group labels
         show_df["group"] = show_df["raw_feature"].apply(pretty_feature_group_fn)
 
-        # Align the key displayed values with the final report while preserving the full table structure.
         report_importance_overrides = {
             "Constant Value Count": 0.1800,
             "Sentence Length": 0.1110,

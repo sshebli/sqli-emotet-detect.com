@@ -202,10 +202,6 @@ def render_emotet_info_page(go_home_fn: VoidFn) -> None:
 # ═══════════════════════════════════════════════════════════════
 # RELATIONSHIP PAGE
 # ═══════════════════════════════════════════════════════════════
-
-# ═══════════════════════════════════════════════════════════════
-# RELATIONSHIP PAGE
-# ═══════════════════════════════════════════════════════════════
 def render_relationship_info_page(go_home_fn: VoidFn) -> None:
     render_back_home_button(go_home_fn)
     render_page_title("Relationship Between SQLi and Emotet")

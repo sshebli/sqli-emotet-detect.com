@@ -1,6 +1,6 @@
 # A Machine Learning Approach to Multi-Stage Cyber-Attack Detection: SQL Injection and Emotet Behaviour Analysis
 
-This project presents a machine learning pipeline for detecting cyber-attack behaviour across two distinct stages: SQL injection (SQLi) and Emotet-related network activity. It includes trained Random Forest models, dataset preparation scripts, evaluation utilities, and a Streamlit dashboard for interactive testing and explainability.
+This project presents a machine learning pipeline for detecting cyber-attack behaviour across two distinct stages: SQL injection (SQLi) and Emotet-related network activity. It includes trained Random Forest models, dataset preparation scripts, evaluation utilities, and a Streamlit dashboard for interactive testing and explainability -- https://cross-layer-detection.streamlit.app/
 
 ## Project Overview
 

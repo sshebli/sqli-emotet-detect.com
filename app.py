@@ -79,7 +79,7 @@ def _build_feature_lists(
     return sqli, emotet
 
 
-# Convert lists to tuples so st.cache_data can hash them
+# Convert lists to tuples
 schema_map = _build_schema_map(tuple(schema))
 defaults = _build_defaults(tuple(schema))
 SQLI_FEATURES, EMOTET_FEATURES = _build_feature_lists(
