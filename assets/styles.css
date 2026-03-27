@@ -828,7 +828,7 @@ button[kind="primary"]:hover,
 }
 
 /* =========================================================
-   HOME CARDS
+   HOME CARDS — stable zoom-safe sizing
    ========================================================= */
 
 .st-key-home_card_grid .stButton > button {
@@ -925,6 +925,8 @@ button[kind="primary"]:hover,
     --home-card-line-height: 1.0;
   }
 }
+
+/* Extra protection against letter-by-letter collapse */
 .st-key-home_card_grid .stButton > button,
 .st-key-home_card_grid .stButton > button * {
   word-break: keep-all !important;
@@ -1119,7 +1121,7 @@ div[data-testid="stProgress"] > div > div > div,
   background-color: var(--accent-purple) !important;
 }
 
-/* Prediction card styles */
+/* Prediction card styles, if used */
 .prediction-card {
   background: linear-gradient(135deg, #F6F0FB 0%, #EDE5F6 100%);
   border: 1px solid rgba(138, 112, 184, 0.35);
@@ -1695,6 +1697,7 @@ div[data-testid="stTable"] td:last-child {
 
 /* =========================================================
    QUIZ — SECTION-COLOURED QUESTION CARDS
+   Uses identical selector pattern to the working about_*_box
    ========================================================= */
 
 /* SQLi — purple tint on wrapper */
@@ -1711,7 +1714,7 @@ div[data-testid="stTable"] td:last-child {
   border-radius: var(--radius-lg) !important;
 }
 
-/* Combined */
+/* Combined — purple-to-teal on wrapper */
 .st-key-qc_cq1, .st-key-qc_cq2, .st-key-qc_cq3 {
   background: linear-gradient(135deg, rgba(90,45,145,0.11), rgba(47,111,115,0.08)) !important;
   border-radius: var(--radius-lg) !important;
@@ -1742,7 +1745,7 @@ div[data-testid="stTable"] td:last-child {
   border: 1.5px solid rgba(90,45,145,0.25) !important;
 }
 
-/* Inner block — coloured background */
+/* Inner block — coloured background (both > and descendant selectors) */
 .st-key-qc_sq1 > div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"],
 .st-key-qc_sq2 > div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"],
 .st-key-qc_sq3 > div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"],
@@ -1782,7 +1785,7 @@ div[data-testid="stTable"] td:last-child {
   background: linear-gradient(135deg, rgba(90,45,145,0.11), rgba(47,111,115,0.08)) !important;
 }
 
-/* Quiz button */
+/* Quiz button indentation + improved spacing */
 [class*="st-key-qc_"] .stButton {
   margin-top: -2px !important;
   margin-bottom: 2px !important;
