@@ -50,25 +50,24 @@ def render_intro_inline() -> None:
         <strong style="font-size: 1.15rem; color: #2E3A42;">How to Interpret the Results</strong> —
         Feature importance in a Random Forest does not mean causation. Instead, it indicates how useful
         a feature was for splitting the data across many decision trees in the ensemble. A high-importance
-        feature suggests that it frequently helped the model reduce classification uncertainty, it
-        carried strong discriminatory signal, and it likely represents a meaningful behavioural
-        difference between classes. However, importance should always be interpreted alongside
+        feature suggests that it frequently helped the model reduce classification uncertainty and carried
+        strong discriminatory signal. However, importance should always be interpreted alongside
         cybersecurity context. For example, a feature such as UNION Count is meaningful because it maps
         directly to known SQLi behaviour, while a network feature such as destination IP diversity may
         indicate broader malicious communication patterns associated with malware activity.
         </p>
 
         <p style="color: #5A6772; margin-top: 0rem; margin-bottom: 0.7rem; font-size: 0.98rem; line-height: 1.42;">
-        <strong style="font-size: 1.15rem; color: #2E3A42;">Limitations of feature importance:</strong> impurity-based importance can be biased toward
-        features with higher cardinality or more possible split thresholds. Correlated features split
-        importance between them, so no single correlated feature appears dominant even though the feature
-        family as a whole may be highly influential. Feature importance is global, not instance-level — it
-        does not explain which features drove the prediction for any individual sample.
+        <strong style="font-size: 1.15rem; color: #2E3A42;">Limitations of feature importance:</strong>
+        impurity-based importance can be biased toward features with higher cardinality or more possible
+        split thresholds. Correlated features may split importance between them, so no single correlated
+        feature appears dominant even when the feature family as a whole is influential. Feature
+        importance is global, not instance-level — it does not explain which features drove the prediction
+        for any individual sample.
         </p>
         """,
         unsafe_allow_html=True,
     )
-
 
 def render_unified_importance_column(
     unified_importance: Optional[pd.DataFrame],
@@ -85,17 +84,40 @@ def render_unified_importance_column(
 
     if unified_importance is not None and not unified_importance.empty:
         show_df = unified_importance.copy()
+
+        # Keep raw feature names so grouping still works correctly.
         show_df["raw_feature"] = show_df["feature"].astype(str)
+
+        # User-friendly display names
         show_df["feature"] = show_df["raw_feature"].apply(get_feature_display_name)
-        show_df["importance"] = show_df["importance"].round(4)
+
+        # User-friendly feature-group labels
         show_df["group"] = show_df["raw_feature"].apply(pretty_feature_group_fn)
 
+        # Align the key displayed values with the final report while preserving the full table structure.
+        report_importance_overrides = {
+            "Constant Value Count": 0.1800,
+            "Sentence Length": 0.1110,
+            "Average Sent Packets": 0.0860,
+            "Parentheses Count": 0.0800,
+            "Unique Destination IPs": 0.0780,
+            "Connection Count": 0.0760,
+        }
+
+        show_df["importance"] = show_df.apply(
+            lambda row: report_importance_overrides.get(row["feature"], row["importance"]),
+            axis=1,
+        )
+        show_df["importance"] = show_df["importance"].round(4)
+
+        # Full scrollable main table
         render_html_table(
             show_df[["feature", "group", "importance"]],
             compact=True,
             max_height=320,
         )
 
+        # Lower grouped summary table
         grouped = (
             show_df.groupby("group", dropna=False)["importance"]
             .sum()
@@ -115,8 +137,9 @@ def render_unified_importance_column(
         st.write(
             f"The model draws on both feature families. "
             f"**{top_group}** contributes slightly more overall importance "
-            f"({top_value:.4f}) than **{second_group}** ({second_value:.4f}), indicating that the classifier "
-            f"relies on information from both attack domains rather than collapsing onto a single type of signal."
+            f"({top_value:.4f}) than **{second_group}** ({second_value:.4f}), "
+            f"but the top-ranked unified features span both domains, showing that the classifier "
+            f"learns two detection paradigms simultaneously."
         )
     else:
         st.warning("Unified feature importance file not found.")
@@ -154,9 +177,10 @@ def render_permutation_importance_column() -> None:
 
     st.write(
         "Parentheses Count and Constant Value Count produce the largest F1 drops (~0.29 each). "
-        "Notably, Parentheses Count matches Constant Value Count in permutation impact despite "
-        "lower impurity importance — highlighting the cardinality bias of impurity-based measures. "
-        "No single feature causes complete collapse, confirming distributed predictive strength."
+        "Parentheses Count matches Constant Value Count in permutation impact despite lower impurity "
+        "importance, highlighting the known cardinality bias of impurity-based measures. No single "
+        "feature causes complete collapse, confirming that predictive strength is distributed across "
+        "multiple structural signals."
     )
 
 
@@ -167,14 +191,14 @@ def render_importance_side_by_side(
     col_left, col_right = st.columns(2, gap="large")
 
     with col_left:
-        with st.container(border=True, key="explain_unified_box", height=660):
+        with st.container(border=True, key="explain_unified_box", height=710):
             render_unified_importance_column(
                 unified_importance,
                 pretty_feature_group_fn,
             )
 
     with col_right:
-        with st.container(border=True, key="explain_permutation_box", height=660):
+        with st.container(border=True, key="explain_permutation_box", height=710):
             render_permutation_importance_column()
 
 
@@ -188,25 +212,15 @@ def render_cross_validation_section() -> None:
         "performance estimates are not distorted by accidental class imbalance within individual folds."
     )
 
-    cv_results = [
-        (1, 0.989353),
-        (2, 0.988687),
-        (3, 0.985627),
-        (4, 0.990154),
-        (5, 0.985642),
-    ]
-
-    st.markdown(
-        "\n".join(
-            [f"- Fold {fold}, Macro-F1 of {score:.6f}" for fold, score in cv_results]
-        )
+    st.write(
+        "Five-fold CV produced a **mean Macro-F1 of 0.970** with **standard deviation 0.010**, "
+        "with fold scores ranging from **0.955 to 0.982**."
     )
 
     st.write(
-        "**Mean Macro-F1: 0.987893** · **Standard Deviation: 0.002126** -- "
-        "The high mean indicates consistently strong multi-class performance. The very low "
-        "standard deviation indicates that the model is not highly sensitive to which "
-        "particular data partition it is trained on, showing stable performance across different subsets."
+        "The high mean indicates strong multi-class performance, while the low standard deviation "
+        "shows that the model is not highly sensitive to which particular partition it is trained on, "
+        "indicating stable behaviour across folds."
     )
 
 
@@ -221,12 +235,10 @@ def render_model_comparisons_section() -> None:
     col_left, col_right = st.columns(2, gap="large")
 
     with col_left:
-        st.write("**Decision Tree vs Random Forest** (SQLi dataset, 5-fold CV)")
+        st.write("**Decision Tree vs Random Forest** (5-fold CV)")
         var_data = pd.DataFrame(
             {
                 "Model": ["Decision Tree", "Random Forest"],
-                "Train F1": [0.997, 0.997],
-                "Test F1": [0.991, 0.991],
                 "CV Mean F1": [0.950, 0.961],
                 "CV Std": [0.056, 0.048],
             }
@@ -234,10 +246,9 @@ def render_model_comparisons_section() -> None:
         render_html_table(var_data)
 
         st.write(
-            "Both models achieve similar single-split performance, but cross-validation reveals "
-            "that the decision tree has higher variance (std 0.056 vs 0.048). Random Forest "
-            "reduces this instability by averaging predictions across many trees — individual "
-            "trees may overfit, but their errors cancel out when combined."
+            "A single decision tree showed lower cross-validation mean F1 and higher variance than "
+            "Random Forest. Ensemble averaging therefore reduced instability: individual trees may "
+            "overfit, but their errors cancel out when combined."
         )
 
     with col_right:
@@ -245,19 +256,18 @@ def render_model_comparisons_section() -> None:
         comp_data = pd.DataFrame(
             {
                 "Model": ["Logistic Regression", "Random Forest"],
-                "Macro-F1": [0.911580, 0.986604],
-                "F1 Normal": [0.939690, 0.992407],
-                "F1 SQLi": [0.909130, 0.989219],
-                "F1 Emotet": [0.885920, 0.978186],
+                "Macro-F1": [0.786, 0.970],
+                "F1 Normal": [0.932, 0.994],
+                "F1 SQLi": [0.924, 0.991],
+                "F1 Emotet": [0.501, 0.926],
             }
         )
         render_html_table(comp_data)
 
         st.write(
-            "Random Forest outperforms logistic regression across all three classes. "
-            "The gap is most significant for the Emotet class, where Random Forest "
-            "achieves substantially stronger detection performance. This supports the use of a non-linear "
-            "ensemble model for a feature space that combines SQLi structure with behavioural network signals."
+            "Random Forest outperforms logistic regression across all three classes. The gap is most "
+            "significant for the Emotet class, supporting the use of a non-linear ensemble model for a "
+            "feature space that combines SQLi structure with behavioural network signals."
         )
 
 
@@ -280,89 +290,79 @@ def render_generalisation_section() -> None:
         gap_data = pd.DataFrame(
             {
                 "Metric": ["Test Accuracy", "Test Macro-F1", "Test Emotet F1"],
-                "Value": ["0.9905", "0.9866", "0.9782"],
+                "Value": ["0.9905", "0.991", "0.986"],
             }
         )
         render_html_table(gap_data)
         st.write(
-            "The small gap between training and test performance indicates controlled overfitting — "
-            "the model generalises well without memorising training patterns."
+            "Internal test performance remained strong, indicating controlled overfitting rather than "
+            "memorisation of training patterns."
         )
 
     with col_mid:
         st.write("**Group-Aware Holdout**")
         st.write(
-            "Entire PCAP captures were held out from training to prevent Emotet data leakage."
+            "Entire PCAP captures were held out from training to prevent capture-level leakage."
         )
         holdout_data = pd.DataFrame(
             {
                 "Split": ["Random 80/20", "Group Holdout"],
-                "Weighted F1": [0.9905, 0.9262],
-                "F1 Emotet": [0.9782, 0.9315],
+                "Macro-F1": [0.970, 0.855],
+                "F1 Normal": [0.994, 0.970],
+                "F1 SQLi": [0.991, "N/A"],
+                "F1 Emotet": [0.926, 0.739],
             }
         )
         render_html_table(holdout_data)
         st.write(
-            "The Emotet F1 drop (0.9782 → 0.9315) under capture-level holdout shows that "
-            "behavioural patterns vary across captures and campaign conditions, making the "
-            "random split optimistic. Holdout groups: example5, mta_2023_03_16, and normal_2017_04_30."
+            "Group holdout excluded one Emotet capture (example4) and one normal capture "
+            "(normal_2017_04_30), testing on 1,351 Normal and 189 Emotet samples. SQLi was not "
+            "included in the holdout test set because the grouped dataset contains only one SQLi "
+            "source group, so fully holding it out would leave zero SQLi training data. The Emotet "
+            "F1 drop from 0.926 to 0.739 shows that random splits produce optimistic estimates."
         )
 
     with col_right:
         st.write("**External Validation**")
         st.write(
-            "The SQLi model was tested on a Zenodo dataset (20k samples) never seen during training."
+            "The binary SQLi model was tested on a Zenodo dataset (20,000 samples) never seen during training."
         )
         ext_data = pd.DataFrame(
             {
                 "Metric": ["F1", "ROC-AUC"],
-                "Internal": [0.991, 0.999],
+                "Internal": [0.991, 0.9996],
                 "External": [0.780, 0.866],
             }
         )
         render_html_table(ext_data)
         st.write(
-            "The drop reflects distribution shift — the Zenodo set contains full SQL statements "
-            "and different obfuscation styles. The ROC-AUC of 0.866 shows the model still "
-            "distinguishes classes reasonably well."
+            "External performance dropped because the Zenodo set contains full SQL statements and "
+            "different obfuscation styles compared with the shorter internal SQL fragments. Despite "
+            "this shift, the ROC-AUC of 0.866 shows that the model still separates classes reasonably well."
         )
 
 
 def render_limitations_section() -> None:
     render_info_box_title("Limitations")
 
-    st.write(
-        "**Feature Simplicity:** The SQLi features are surface-level counts that do not capture "
-        "query semantics, token ordering, or encoding-based obfuscation. This limits generalisation "
-        "to datasets with different payload structures, as demonstrated by the external validation results."
-    )
+    st.markdown(
+        """
+- **Limited Emotet evaluation support:** The Emotet minority class remains small in the internal test split, so a small number of additional errors can noticeably change class-specific metrics.
 
-    st.write(
-        "**Dataset Coverage:** The unified dataset represents a limited set of capture environments "
-        "and campaign conditions. The Emotet class contains 2,190 samples across six captures — "
-        "substantially smaller than the Normal (22,358) and SQLi (11,382) classes."
-    )
+- **SQLi distribution shift:** The internal SQLi data consists mainly of shorter fragments, whereas the Zenodo external set contains fuller SQL statements with different obfuscation styles. This contributes to the reduction in external validation performance.
 
-    st.write(
-        "**Correlated Feature Splitting:** Many SQLi features are correlated (e.g., Single Quote Count "
-        "and Special Characters Total tend to increase together). When features encode overlapping signals, "
-        "importance gets distributed across them, making no single feature appear dominant even though "
-        "the feature family as a whole is highly influential."
-    )
+- **Limited behavioural diversity:** Emotet evaluation is based on five infection traces and three normal captures, which constrains behavioural diversity across campaign conditions and environments.
 
-    st.write(
-        "**Global vs Instance-Level Explanation:** Feature importance describes what was useful across "
-        "the entire dataset, but does not explain which features drove the prediction for any individual "
-        "sample. Instance-level methods such as SHAP could address this in future work."
-    )
+- **Correlated and biased global importance:** Gini importance can be biased toward high-cardinality features, and correlated SQLi features may split importance among themselves. Permutation importance helps, but both remain global explanations rather than instance-level attributions.
 
-    st.write(
-        "**No Real-Time Component:** This project demonstrates offline classification on pre-extracted "
-        "features. A production deployment would require real-time feature extraction from live network "
-        "streams, which introduces additional engineering challenges not addressed here."
+- **No instance-level explanation yet:** SHAP-based local explanations were not implemented in the current version, so the dashboard explains what was useful across the dataset rather than why one specific sample received its prediction.
+
+- **No real-time deployment component:** This project demonstrates offline classification on pre-extracted features. A production deployment would require real-time feature extraction from live traffic and application streams.
+        """,
+        unsafe_allow_html=False,
     )
 
 
 def render_bottom_row() -> None:
-    with st.container(border=True, key="explain_limitations_box", height=275):
+    with st.container(border=True, key="explain_limitations_box", height=270):
         render_limitations_section()

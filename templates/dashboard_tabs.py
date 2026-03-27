@@ -70,15 +70,25 @@ def render_home_tab(
         st.markdown(
             """
             <p style="color: #5A6772; margin-top: -0.2rem; margin-bottom: 0.55rem; font-size: 1.02rem; line-height: 1.42;">
-            This page provides an interactive interface for testing the binary SQL injection classifier. The model is a Random Forest trained on 30,919 labelled queries using nine structural features that capture how a query is constructed — operator frequency, quote usage, numeric literal counts, and overall complexity. Users can adjust individual feature values using the sliders below and observe how the model's predicted probability changes in real time.
+            This page provides an interactive interface for testing the binary SQL injection classifier. The model is a Random Forest trained on 30,919 labelled queries using nine engineered structural features that describe how a query is constructed, including operator frequency, quote usage, constant values, and overall complexity. Users can adjust individual feature values with the sliders below and observe how the predicted SQLi probability changes in real time.
             </p>
+            """,
+            unsafe_allow_html=True,
+        )
 
+        st.markdown(
+            """
             <p style="color: #5A6772; margin-top: 0rem; margin-bottom: 0.55rem; font-size: 1.02rem; line-height: 1.42;">
-            The <strong>decision threshold</strong> controls the boundary between a benign and malicious classification. At the default threshold of 0.50, any input with a predicted SQLi probability above 50% is flagged as malicious. Lowering the threshold increases recall (catches more attacks but risks more false positives), while raising it increases precision (fewer false alarms but may miss some attacks).
+            The decision threshold determines the boundary between benign and malicious classification. At the default threshold of 0.50, inputs with predicted SQLi probability above 50% are classified as malicious. Lowering the threshold increases recall but may increase false positives, while raising it increases precision but may miss some attacks.
             </p>
+            """,
+            unsafe_allow_html=True,
+        )
 
-            <p style="color: #5A6772; margin-top: 0rem; margin-bottom: 0.7rem; font-size: 0.98rem; line-height: 1.42;">
-            For detailed validation results, feature importance analysis, and model comparison metrics, see the <strong>Explainability</strong> tab.
+        st.markdown(
+            """
+            <p style="color: #5A6772; margin-top: 0rem; margin-bottom: 0.3rem; font-size: 1.02rem; line-height: 1.42;">
+            Further validation results, feature importance analysis, and comparison metrics are available in the Explainability tab.
             </p>
             """,
             unsafe_allow_html=True,
@@ -146,11 +156,11 @@ def render_unified_tab(
         </p>
 
         <p style="color: #5A6772; margin-top: 0rem; margin-bottom: 0.55rem; font-size: 1.02rem; line-height: 1.42;">
-        Three <strong>test modes</strong> are available: <strong>SQLi-style</strong> edits only SQLi features while Emotet features are set to zero, <strong>Emotet-style</strong> edits only Emotet features while SQLi features are set to zero, and <strong>Hybrid</strong> makes both feature groups editable simultaneously. The selected mode controls which features are active, but the model still decides the final class based on the full 26-feature input.
+        Three <strong>test modes</strong> are available: <strong>SQLi-style</strong> edits only SQLi features while Emotet features remain at zero, <strong>Emotet-style</strong> edits only Emotet features while SQLi features remain at zero, and <strong>Hybrid</strong> makes both feature groups editable simultaneously. The selected mode controls which features are active, but the model still bases the final prediction on the full 26-feature input.
         </p>
 
         <p style="color: #5A6772; margin-top: 0rem; margin-bottom: 2rem; font-size: 0.98rem; line-height: 1.42;">
-        For detailed validation results, feature importance analysis, and model comparison metrics, see the <strong>Explainability</strong> tab.
+        Further validation results, feature importance analysis, and model comparison metrics are available in the <strong>Explainability</strong> tab.
         </p>
         """,
         unsafe_allow_html=True,

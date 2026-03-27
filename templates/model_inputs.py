@@ -29,7 +29,7 @@ def render_sqli_feature_explanations(container_key: str = "sqli_feature_explain_
             unsafe_allow_html=True,
         )
         st.write(
-            "These features are entirely numeric, making them directly usable by the Random Forest classifier without requiring text vectorisation or natural language processing."
+            "These features are entirely numeric, making them directly usable by the Random Forest classifier without requiring text vectorisation or natural language processing. Together, they describe the structural composition of a query rather than its semantic meaning."
         )
         st.markdown(
             render_feature_explanation_html(SQLI_FEATURE_EXPLANATIONS),
@@ -46,13 +46,14 @@ def render_sqli_feature_importance_section(importance):
             unsafe_allow_html=True,
         )
         st.write(
-            "The SQLi model was trained on nine engineered payload features. "
+            "The SQLi model was trained on nine engineered structural payload features. "
             "Importance is measured by Mean Decrease in Impurity (Gini) across all 300 trees. "
-            "Higher importance means the model relied more heavily on that feature when "
-            "separating malicious SQL injection inputs from benign queries. "
-            "The model's behaviour is driven by structural properties — Constant Value Count and "
-            "Parentheses Count — rather than isolated SQL keywords. Structural signals generalise "
-            "better across datasets than keyword tokens, which can be easily obfuscated."
+            "Higher importance indicates that the model relied more heavily on that feature when "
+            "separating malicious SQL injection inputs from benign queries. The results show that "
+            "the model is driven primarily by structural properties — especially Constant Value "
+            "Count and Parentheses Count — rather than isolated SQL keywords. These structural "
+            "signals generalise better across datasets than keyword tokens, which can be easily "
+            "obfuscated."
         )
 
         if importance is not None and not importance.empty:

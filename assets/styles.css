@@ -6,7 +6,7 @@
 :root {
   --page-bg: #E9EFF1;
   --text-primary: #213841;
-  --text-secondary: #4D5D66;
+  --text-secondary: #2c1e41;
   --text-strong: #18242B;
   --text-muted: #42545C;
 
@@ -305,7 +305,7 @@ h3 {
   margin-top: -0.12rem !important;
   margin-bottom: 0rem !important;
   padding-bottom: 10px !important;
-  color: #334A55 !important;
+  color: #3c1974 !important;
   font-size: 1.55rem !important;
   font-weight: 600 !important;
   letter-spacing: -0.02em !important;
@@ -316,6 +316,20 @@ h3 {
 .page-title-wrap + p,
 .page-title-wrap + div p:first-of-type {
   margin-top: 0.2rem !important;
+}
+
+.hero-caption {
+    margin-top: 0.35rem;
+    margin-left: 0.4rem;
+    font-size: 0.95rem;
+    color: #34224b !important;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.hero-title-wrap .hero-title-row .hero-caption,
+.hero-title-wrap .hero-title-row .hero-caption em {
+    color: #34224b !important;
 }
 
 /* =========================================================
@@ -811,6 +825,113 @@ button[kind="primary"]:hover,
   letter-spacing: var(--home-card-letter-spacing) !important;
   line-height: var(--home-card-line-height) !important;
   text-align: var(--home-card-text-align) !important;
+}
+
+/* =========================================================
+   HOME CARDS — stable zoom-safe sizing
+   ========================================================= */
+
+.st-key-home_card_grid .stButton > button {
+  min-height: 130px !important;
+  height: 130px !important;
+}
+
+@media (max-width: 1300px) {
+  .st-key-home_card_grid .stButton > button {
+    min-height: 108px !important;
+    height: 108px !important;
+  }
+
+  .st-key-sqli_info_btn_wrap .stButton > button {
+    --home-card-padding-left: 58px;
+    --home-card-padding-right: 8px;
+    --home-card-image-position: 6px center;
+    --home-card-image-size: 36px auto;
+    --home-card-text-size: 0.72rem;
+    --home-card-line-height: 0.98;
+    --home-card-letter-spacing: -0.02em;
+  }
+
+  .st-key-emotet_btn_wrap .stButton > button {
+    --home-card-padding-left: 58px;
+    --home-card-padding-right: 8px;
+    --home-card-image-position: 6px center;
+    --home-card-image-size: 38px auto;
+    --home-card-text-size: 0.72rem;
+    --home-card-line-height: 0.98;
+    --home-card-letter-spacing: -0.02em;
+  }
+
+  .st-key-relationship_btn_wrap .stButton > button {
+    --home-card-padding-left: 54px;
+    --home-card-padding-right: 6px;
+    --home-card-image-position: 5px center;
+    --home-card-image-size: 40px auto;
+    --home-card-text-size: 0.60rem;
+    --home-card-line-height: 0.96;
+    --home-card-letter-spacing: -0.015em;
+  }
+
+  .st-key-sqli_info_btn_wrap .stButton > button,
+  .st-key-emotet_btn_wrap .stButton > button,
+  .st-key-relationship_btn_wrap .stButton > button,
+  .st-key-pipeline_btn_wrap .stButton > button {
+    --home-card-image-position: 0px center !important;
+    --home-card-image-size: 150px auto !important;
+    --home-card-padding-left: 150px !important;
+    --home-card-padding-right: 0px !important;
+  }
+
+  .st-key-home_card_grid .stButton > button p {
+    font-size: 1rem !important;
+    line-height: 1.0 !important;
+    letter-spacing: -0.01em !important;
+  }
+}
+
+/* Trigger earlier, because browser zoom effectively narrows the layout */
+@media (max-width: 1800px) {
+  .st-key-sqli_info_btn_wrap .stButton > button,
+  .st-key-emotet_btn_wrap .stButton > button,
+  .st-key-relationship_btn_wrap .stButton > button {
+    min-height: 130px !important;
+    height: 130px !important;
+  }
+
+  .st-key-sqli_info_btn_wrap .stButton > button {
+    --home-card-padding-left: 128px;
+    --home-card-padding-right: 16px;
+    --home-card-image-position: 18px center;
+    --home-card-image-size: 68px auto;
+    --home-card-text-size: 1.32rem;
+    --home-card-line-height: 1.0;
+  }
+
+  .st-key-emotet_btn_wrap .stButton > button {
+    --home-card-padding-left: 122px;
+    --home-card-padding-right: 16px;
+    --home-card-image-position: 18px center;
+    --home-card-image-size: 70px auto;
+    --home-card-text-size: 1.3rem;
+    --home-card-line-height: 1.0;
+  }
+
+  .st-key-relationship_btn_wrap .stButton > button {
+    --home-card-padding-left: 118px;
+    --home-card-padding-right: 14px;
+    --home-card-image-position: 14px center;
+    --home-card-image-size: 72px auto;
+    --home-card-text-size: 0.96rem;
+    --home-card-line-height: 1.0;
+  }
+}
+
+/* Extra protection against letter-by-letter collapse */
+.st-key-home_card_grid .stButton > button,
+.st-key-home_card_grid .stButton > button * {
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  white-space: normal !important;
 }
 
 /* Shared left-image card preset */
@@ -1357,7 +1478,7 @@ div[data-testid="stTable"] td:last-child {
 
 .feature-explain-desc {
   font-size: 0.85rem;
-  color: #4D5D66;
+  color: #5c4d66;
   line-height: 1.35;
 }
 
@@ -1366,7 +1487,7 @@ div[data-testid="stTable"] td:last-child {
    ========================================================= */
 .enhanced-flow {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   gap: 0.45rem;
   flex-wrap: nowrap;
@@ -1664,19 +1785,30 @@ div[data-testid="stTable"] td:last-child {
   background: linear-gradient(135deg, rgba(90,45,145,0.11), rgba(47,111,115,0.08)) !important;
 }
 
-/* Quiz button indentation + tighter spacing */
+/* Quiz button indentation + improved spacing */
 [class*="st-key-qc_"] .stButton {
-  margin-top: -6px !important;
-  margin-bottom: -6px !important;
+  margin-top: -2px !important;
+  margin-bottom: 2px !important;
   padding-left: 2.7rem !important;
 }
 
 [class*="st-key-qc_"] .stButton button {
   text-align: left !important;
   justify-content: flex-start !important;
+  padding-top: 0.45rem !important;
+  padding-bottom: 0.45rem !important;
+  padding-left: 0.8rem !important;
+  padding-right: 0.8rem !important;
+  border-width: 1.2px !important;
+  line-height: 1.35 !important;
+  border-radius: 10px !important;
+  transition: all 0.18s ease !important;
 }
 
-/* Quiz cards — exact equal-height support */
+[class*="st-key-qc_"] .stButton button:hover {
+  transform: translateY(-1px);
+}
+
 [class*="st-key-qc_"] > div[data-testid="stVerticalBlockBorderWrapper"] {
   display: flex !important;
   flex-direction: column !important;
@@ -1684,6 +1816,29 @@ div[data-testid="stTable"] td:last-child {
 
 [class*="st-key-qc_"] > div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"] {
   flex: 1 1 auto !important;
+}
+
+/* Quiz results box */
+.st-key-quiz_score_box,
+.st-key-quiz_score_box > div[data-testid="stVerticalBlockBorderWrapper"],
+.st-key-quiz_score_box > div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"],
+.st-key-quiz_score_box div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"] {
+  background: linear-gradient(
+    135deg,
+    rgba(245, 239, 251, 0.96) 0%,
+    rgba(234, 246, 246, 0.92) 100%
+  ) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+.st-key-quiz_score_box > div[data-testid="stVerticalBlockBorderWrapper"] {
+  border: 1px solid rgba(124, 92, 143, 0.24) !important;
+  box-shadow: 0 12px 28px rgba(92, 72, 125, 0.08) !important;
+}
+
+.st-key-quiz_score_box > div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"],
+.st-key-quiz_score_box div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"] {
+  padding: 28px 30px 34px 30px !important;
 }
 
 /* =========================================================

@@ -81,24 +81,24 @@ def render_sqli_prediction_panel(
         st.progress(proba)
 
         if proba >= threshold:
-            st.error("Model confidence indicates likely SQL Injection.")
+            st.error("Model confidence indicates likely SQL injection.")
         else:
-            st.success("Model confidence indicates benign query.")
+            st.success("Model confidence indicates a benign query.")
 
         st.info(
-            "Lower thresholds increase recall (catch more SQLi but risk more false positives). "
-            "Higher thresholds increase precision (reduce false alarms but may miss attacks)."
+            "Lower thresholds increase recall by catching more SQLi inputs, but may increase false positives. "
+            "Higher thresholds increase precision, but may miss some attacks."
         )
 
         st.write(f"**Decision (threshold = {threshold:.2f}):** `{decision}`")
 
-        st.subheader("Top Global Features (Training)")
-        if importance is not None:
+        st.subheader("Top Training-Set Feature Importances")
+        if importance is not None and not importance.empty:
             top3 = importance.head(3).copy()
             top3["importance"] = top3["importance"].round(4)
             render_feature_importance_card(top3)
         else:
-            st.info("feature_importance.csv not found.")
+            st.info("SQLi feature-importance data not available.")
 
         st.markdown('<div style="height: 0.7rem;"></div>', unsafe_allow_html=True)
 
@@ -122,7 +122,7 @@ def render_unified_prediction_panel(
     from templates.helpers import get_feature_display_name, render_prediction_card
 
     with st.container(border=True, key="unified_prediction_box", height=panel_height):
-        st.subheader("Unified prediction")
+        st.subheader("Unified Prediction")
 
         unified_input = {feat: 0.0 for feat in unified_features}
 
@@ -155,21 +155,21 @@ def render_unified_prediction_panel(
         if pred_class == 0:
             st.success("The unified model predicts a normal pattern.")
         elif pred_class == 1:
-            st.error("The unified model predicts SQL Injection.")
+            st.error("The unified model predicts SQLi.")
         else:
             st.warning("The unified model predicts Emotet-like behaviour.")
 
-        st.write("### Class probabilities")
+        st.write("### Class Probabilities")
         for cls, p in zip(unified_model.classes_, proba):
             render_probability_bar_fn(CLASS_LABELS[int(cls)], float(p))
 
-        st.write("### Top Global Unified Features")
-        if unified_importance is not None:
+        st.write("### Top Unified Feature Importances")
+        if unified_importance is not None and not unified_importance.empty:
             top6 = unified_importance.head(6).copy()
             top6["feature"] = top6["feature"].apply(get_feature_display_name)
             top6["importance"] = top6["importance"].round(4)
             render_feature_importance_card(top6)
         else:
-            st.info("feature_importance_unified.csv not found.")
+            st.info("Unified feature-importance data not available.")
 
     return proba, pred_class, pred_label, pred_conf
