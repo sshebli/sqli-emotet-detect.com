@@ -126,7 +126,7 @@ def render_home_about_sections() -> None:
     col1, col2, col3, col4 = st.columns(4, gap="medium")
 
     with col1:
-        with st.container(border=True, key="about_abstract_box", height=310):
+        with st.container(border=True, key="about_abstract_box", height=290):
             render_info_box_title("Abstract")
             st.write(
                 "This project presents a machine learning pipeline for detecting multi-stage "
