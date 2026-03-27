@@ -92,14 +92,13 @@ def inject_tab_persistence(active_tab_key: str) -> None:
                 const idx = KEYS.indexOf(ACTIVE);
                 if (idx >= 0 && btns[idx]) {{
                     const isSelected =
-                        btns[idx].getAttribute("aria-selected") === "true" ||
-                        btns[idx].dataset.tabRestored === "true";
-
+                        btns[idx].getAttribute("aria-selected") === "true";
                     if (!isSelected) {{
-                        btns[idx].dataset.tabRestored = "true";
                         btns[idx].click();
                     }}
+                    return true;
                 }}
+                return false;
             }}
 
             function init() {{
@@ -113,8 +112,9 @@ def inject_tab_persistence(active_tab_key: str) -> None:
             const observer = new MutationObserver(() => {{
                 attachListeners();
                 if (!restored) {{
-                    restoreActiveTab();
-                    restored = true;
+                    if (restoreActiveTab()) {{
+                        restored = true;
+                    }}
                 }}
             }});
 
