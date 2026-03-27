@@ -1,3 +1,10 @@
+"""
+templates/quiz.py
+
+Interactive quiz — 15 MCQs in a 2-column grid layout.
+Each section: 3 rows × 2 questions.
+"""
+
 import streamlit as st
 import streamlit.components.v1 as components
 from textwrap import dedent
@@ -102,7 +109,7 @@ EMOTET_QUESTIONS = [
             "Encrypting victim files",
         ],
         "answer": 1,
-        "explanation": "Beaconing is the persistent, low-volume communication where the infected host regularly contacts its C2 server. This produces distinctive patterns: regular timing, consistent packet sizes, and repeated connections.",
+        "explanation": "Beaconing is the persistent, low-volume communication where the infected host regularly contacts its C2 server. This produces distinctive patterns: regular timing, consistent packet sizes, repeated connections.",
     },
     {
         "id": "eq3",
@@ -126,7 +133,7 @@ EMOTET_QUESTIONS = [
             "Tools can't read Windows executables",
         ],
         "answer": 1,
-        "explanation": "Emotet uses obfuscation and runtime reconstruction techniques that make static binary analysis less reliable, while its network behaviour remains more stable and observable for detection.",
+        "explanation": "Emotet removes function prologues, inserts jumps to hidden memory, and reconstructs instructions at runtime. The binary looks broken statically but executes correctly in memory.",
     },
     {
         "id": "eq5",
@@ -150,7 +157,7 @@ EMOTET_QUESTIONS = [
             "Remove duplicate dataset rows",
         ],
         "answer": 1,
-        "explanation": "Windows from the same PCAP share traffic patterns. Group holdout ensures all rows from a capture go into either train or test, preventing inflated performance from capture-specific patterns.",
+        "explanation": "Windows from the same PCAP share traffic patterns. Group holdout ensures all rows from a capture go into either train or test — preventing inflated performance from capture-specific patterns.",
     },
 ]
 
@@ -165,7 +172,7 @@ COMBINED_QUESTIONS = [
             "The attacks always co-occur",
         ],
         "answer": 1,
-        "explanation": "A unified model must distinguish Normal vs SQLi, Normal vs Emotet, and SQLi vs Emotet, learning structural differences between attack paradigms rather than only anomaly detection.",
+        "explanation": "A unified model must distinguish Normal vs SQLi, Normal vs Emotet, AND SQLi vs Emotet — learning structural differences between attack paradigms, not just anomaly detection.",
     },
     {
         "id": "cq2",
@@ -189,7 +196,7 @@ COMBINED_QUESTIONS = [
             "No connection exists between them",
         ],
         "answer": 1,
-        "explanation": "An attacker gaining database privileges through SQLi can leverage stored procedures to execute OS commands, download malware, and establish C2 communication, bridging application-layer exploitation to network-level compromise.",
+        "explanation": "An attacker gaining database privileges through SQLi can leverage stored procedures to execute OS commands, download malware, and establish C2 communication — bridging application-layer exploitation to network-level compromise.",
     },
 ]
 
@@ -249,15 +256,16 @@ def _render_q(q: dict, index: int, section_id: str) -> bool:
     answered = state_key in st.session_state
     selected = st.session_state.get(state_key, None)
 
+    # Number + question
     st.markdown(
         f"""
-        <div style="display:flex;align-items:flex-start;gap:0.55rem;margin-bottom:0.58rem;">
+        <div style="display:flex;align-items:flex-start;gap:0.55rem;margin-bottom:0.4rem;">
             <span style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
                 width:2rem;height:2rem;border-radius:50%;font-size:0.82rem;font-weight:800;
                 background:{a['num_bg']};border:1.5px solid {a['num_b']};color:{a['num_c']};">
                 {index}
             </span>
-            <span style="font-size:0.95rem;font-weight:600;color:#2E3A42;line-height:1.42;padding-top:0.15rem;">
+            <span style="font-size:0.98rem;font-weight:600;color:#2E3A42;line-height:1.38;padding-top:0.15rem;">
                 {q["q"]}
             </span>
         </div>
@@ -267,15 +275,10 @@ def _render_q(q: dict, index: int, section_id: str) -> bool:
 
     if not answered:
         st.markdown(
-            """
-            <style>
-            div[class*="st-key-qc_"] .stButton{
-                margin-top:-4px !important;
-                margin-bottom:-4px !important;
-            }
-            </style>
-            <div style="margin-left:2.7rem;">
-            """,
+            '<style>'
+            'div[class*="st-key-qc_"] .stButton{margin-top:-6px !important;margin-bottom:-6px !important;}'
+            '</style>'
+            '<div style="margin-left:2.7rem;">',
             unsafe_allow_html=True,
         )
         for i, option in enumerate(q["options"]):
@@ -290,23 +293,23 @@ def _render_q(q: dict, index: int, section_id: str) -> bool:
         for i, option in enumerate(q["options"]):
             if i == correct:
                 st.markdown(
-                    f'<div style="margin-left:2.7rem;padding:0.44rem 0.8rem;border-radius:10px;margin-bottom:6px;'
+                    f'<div style="margin-left:2.7rem;padding:0.4rem 0.75rem;border-radius:10px;margin-bottom:4px;'
                     f'background:rgba(47,111,115,0.08);border:1.5px solid rgba(47,111,115,0.30);'
-                    f'font-size:0.88rem;color:#23605F;font-weight:600;line-height:1.4;">✓ {option}</div>',
+                    f'font-size:0.88rem;color:#23605F;font-weight:600;">✓ {option}</div>',
                     unsafe_allow_html=True,
                 )
             elif i == selected and not is_correct:
                 st.markdown(
-                    f'<div style="margin-left:2.7rem;padding:0.44rem 0.8rem;border-radius:10px;margin-bottom:6px;'
+                    f'<div style="margin-left:2.7rem;padding:0.4rem 0.75rem;border-radius:10px;margin-bottom:4px;'
                     f'background:rgba(180,60,60,0.06);border:1.5px solid rgba(180,60,60,0.25);'
-                    f'font-size:0.88rem;color:#7A3030;font-weight:600;line-height:1.4;">✗ {option}</div>',
+                    f'font-size:0.88rem;color:#7A3030;font-weight:600;">✗ {option}</div>',
                     unsafe_allow_html=True,
                 )
             else:
                 st.markdown(
-                    f'<div style="margin-left:2.7rem;padding:0.44rem 0.8rem;border-radius:10px;margin-bottom:6px;'
+                    f'<div style="margin-left:2.7rem;padding:0.4rem 0.75rem;border-radius:10px;margin-bottom:4px;'
                     f'background:rgba(240,244,248,0.5);border:1px solid rgba(157,176,183,0.18);'
-                    f'font-size:0.88rem;color:#7A8A93;line-height:1.4;">{option}</div>',
+                    f'font-size:0.88rem;color:#7A8A93;">  {option}</div>',
                     unsafe_allow_html=True,
                 )
 
@@ -320,9 +323,9 @@ def _render_q(q: dict, index: int, section_id: str) -> bool:
             tag += 'background:rgba(180,60,60,0.08);color:#8B3A3A;border:1px solid rgba(180,60,60,0.18);">INCORRECT</span>'
 
         st.markdown(
-            f'<div style="margin-left:2.7rem;margin-top:0.62rem;padding:0.72rem 0.9rem;border-radius:11px;'
+            f'<div style="margin-left:2.7rem;margin-top:0.4rem;padding:0.6rem 0.85rem;border-radius:11px;'
             f'background:linear-gradient(135deg,rgba(252,250,255,0.55),rgba(245,252,252,0.55));'
-            f'border:1px solid rgba(138,112,184,0.12);font-size:0.86rem;color:#4D5F69;line-height:1.5;">'
+            f'border:1px solid rgba(138,112,184,0.12);font-size:0.86rem;color:#4D5F69;line-height:1.45;">'
             f'{tag}{q["explanation"]}</div>',
             unsafe_allow_html=True,
         )
@@ -336,19 +339,21 @@ def _render_q(q: dict, index: int, section_id: str) -> bool:
 # MAIN RENDERER
 # ═══════════════════════════════════════════════════════════════
 
-def _sync_quiz_row_heights(card_ids: list[str], row_token: str) -> None:
-    """Force exactly equal heights for one rendered quiz row."""
-    if not card_ids:
+def _sync_all_quiz_rows(all_row_ids: list[list[str]]) -> None:
+    """Equalise card heights across all quiz rows in a single iframe."""
+    if not all_row_ids:
         return
 
-    js_ids = ", ".join([f'"qc_{cid}"' for cid in card_ids])
+    rows_json = ", ".join(
+        "[" + ", ".join(f'"qc_{cid}"' for cid in row) + "]"
+        for row in all_row_ids
+    )
 
     components.html(
         f"""
         <script>
         (function() {{
-            const CARD_KEYS = [{js_ids}];
-            const ROW_TOKEN = "{row_token}";
+            const ROWS = [{rows_json}];
 
             function getCardEl(doc, key) {{
                 const root = doc.querySelector(`.st-key-${{key}}`);
@@ -356,61 +361,46 @@ def _sync_quiz_row_heights(card_ids: list[str], row_token: str) -> None:
                 return root.querySelector('div[data-testid="stVerticalBlockBorderWrapper"]');
             }}
 
-            function reset(cards) {{
-                cards.forEach((card) => {{
-                    card.style.height = "auto";
-                    card.style.minHeight = "0px";
-
-                    const inner = card.querySelector('div[data-testid="stVerticalBlock"]');
-                    if (inner) {{
-                        inner.style.height = "auto";
-                        inner.style.minHeight = "0px";
-                    }}
-                }});
-            }}
-
-            function equalise() {{
-                const doc = window.parent.document;
-                const cards = CARD_KEYS
-                    .map((key) => getCardEl(doc, key))
-                    .filter(Boolean);
-
+            function equaliseRow(doc, keys) {{
+                const cards = keys.map((k) => getCardEl(doc, k)).filter(Boolean);
                 if (!cards.length) return;
 
-                reset(cards);
-
-                let maxHeight = 0;
-                cards.forEach((card) => {{
-                    const h = Math.ceil(card.getBoundingClientRect().height);
-                    if (h > maxHeight) maxHeight = h;
+                cards.forEach((c) => {{
+                    c.style.height = "auto";
+                    c.style.minHeight = "0px";
+                    const inner = c.querySelector('div[data-testid="stVerticalBlock"]');
+                    if (inner) {{ inner.style.height = "auto"; inner.style.minHeight = "0px"; }}
                 }});
 
-                cards.forEach((card) => {{
-                    card.style.height = `${{maxHeight}}px`;
-                    card.style.minHeight = `${{maxHeight}}px`;
+                let maxH = 0;
+                cards.forEach((c) => {{
+                    const h = Math.ceil(c.getBoundingClientRect().height);
+                    if (h > maxH) maxH = h;
+                }});
 
-                    const inner = card.querySelector('div[data-testid="stVerticalBlock"]');
-                    if (inner) {{
-                        inner.style.height = "100%";
-                        inner.style.minHeight = "100%";
-                    }}
+                cards.forEach((c) => {{
+                    c.style.height = `${{maxH}}px`;
+                    c.style.minHeight = `${{maxH}}px`;
+                    const inner = c.querySelector('div[data-testid="stVerticalBlock"]');
+                    if (inner) {{ inner.style.height = "100%"; inner.style.minHeight = "100%"; }}
                 }});
             }}
 
             function run() {{
-                equalise();
-                requestAnimationFrame(equalise);
-                setTimeout(equalise, 60);
-                setTimeout(equalise, 180);
-                setTimeout(equalise, 360);
+                const doc = window.parent.document;
+                ROWS.forEach((keys) => equaliseRow(doc, keys));
             }}
 
             run();
+            requestAnimationFrame(run);
+            setTimeout(run, 60);
+            setTimeout(run, 180);
+            setTimeout(run, 360);
+
             window.addEventListener("resize", run);
 
-            const doc = window.parent.document;
             const observer = new MutationObserver(() => run());
-            observer.observe(doc.body, {{ childList: true, subtree: true }});
+            observer.observe(window.parent.document.body, {{ childList: true, subtree: true }});
         }})();
         </script>
         """,
@@ -420,6 +410,7 @@ def _sync_quiz_row_heights(card_ids: list[str], row_token: str) -> None:
 
 
 def render_quiz_tab() -> None:
+    # ── Title ──
     st.markdown(
         dedent("""
         <div class="page-title-wrap">
@@ -436,14 +427,15 @@ def render_quiz_tab() -> None:
         SQL injection detection, Emotet network behaviour, and their combined relationship.
         </p>
         <p style="color: #5A6772; margin-top: 0rem; margin-bottom: 0.7rem; font-size: 0.98rem; line-height: 1.42;">
-        <strong>Select an answer for each question and the correct answer and explanation will be revealed immediately.
-        Your score is tracked below.</strong>
+        <strong>Select an answer for each question — the correct answer and an explanation will be revealed immediately.<strong>
+        Your score is tracked at the bottom.
         </p>
         """,
         unsafe_allow_html=True,
     )
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
 
+    # ── Reset ──
     if st.button("Reset Quiz", key="quiz_reset_btn"):
         for _, _, qs in ALL_SECTIONS:
             for q in qs:
@@ -452,22 +444,23 @@ def render_quiz_tab() -> None:
                     del st.session_state[sk]
         st.rerun()
 
+    # ── Sections ──
     q_num = 1
     total_correct = 0
     total_answered = 0
-    total_qs = sum(len(qs) for _, _, qs in ALL_SECTIONS)
+    all_row_ids = []
 
     for section_name, section_id, questions in ALL_SECTIONS:
         a = _ACCENTS[section_id]
 
         st.markdown(
             f"""
-            <div style="margin-top:1.25rem;margin-bottom:1.05rem;display:flex;align-items:center;gap:0.55rem;">
+            <div style="margin-top:1.3rem;margin-bottom:1.1rem;display:flex;align-items:center;gap:0.55rem;">
                 <div style="height:3.5px;width:30px;border-radius:999px;background:{a['stripe']};"></div>
-                <span style="font-size:1.55rem;font-weight:700;color:#2E3A42;letter-spacing:-0.02em;">
+                <span style="font-size:1.3rem;font-weight:700;color:#2E3A42;letter-spacing:-0.02em;">
                     {section_name}
                 </span>
-                <span style="padding:0.15rem 0.46rem;border-radius:999px;font-size:0.62rem;font-weight:700;
+                <span style="padding:0.16rem 0.5rem;border-radius:999px;font-size:0.65rem;font-weight:700;
                     background:{a['badge_bg']};color:{a['badge_c']};border:1px solid {a['badge_b']};
                     letter-spacing:0.03em;">
                     {len(questions)} QUESTIONS
@@ -500,39 +493,20 @@ def render_quiz_tab() -> None:
 
                 q_num += 1
 
-            _sync_quiz_row_heights(
-                row_card_ids,
-                f"{section_id}_{row_start}",
-            )
+            all_row_ids.append(row_card_ids)
 
+    _sync_all_quiz_rows(all_row_ids)
+
+    # ── Score ──
+    total_qs = sum(len(qs) for _, _, qs in ALL_SECTIONS)
     all_done = total_answered == total_qs
-
-    # Updated progress summary after questions
-    pct_answered = round((total_answered / total_qs) * 100) if total_qs else 0
-    st.markdown(
-        f"""
-        <div style="margin-top:0.5rem;margin-bottom:1.15rem;padding:0.78rem 0.95rem;border-radius:14px;
-            background:linear-gradient(135deg, rgba(252,250,255,0.55), rgba(245,252,252,0.55));
-            border:1px solid rgba(138,112,184,0.12);">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.8rem;flex-wrap:wrap;">
-                <div style="font-size:0.92rem;color:#4D5F69;font-weight:600;">
-                    Progress: <span style="color:#2E3A42;">{total_answered} / {total_qs}</span> answered
-                </div>
-                <div style="font-size:0.88rem;color:#5E6F78;">
-                    {total_correct} correct so far · {pct_answered}% completed
-                </div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
     if total_answered > 0:
         st.markdown(
             """
-            <div style="margin-top:1.25rem;margin-bottom:1.05rem;display:flex;align-items:center;gap:0.55rem;">
+            <div style="margin-top:1.3rem;margin-bottom:1.1rem;display:flex;align-items:center;gap:0.55rem;">
                 <div style="height:3.5px;width:30px;border-radius:999px;background:linear-gradient(90deg,#5A2D91,#2F6F73);"></div>
-                <span style="font-size:1.45rem;font-weight:700;color:#2E3A42;letter-spacing:-0.02em;">Results</span>
+                <span style="font-size:1.3rem;font-weight:700;color:#2E3A42;letter-spacing:-0.02em;">Results</span>
             </div>
             """,
             unsafe_allow_html=True,
@@ -556,16 +530,16 @@ def render_quiz_tab() -> None:
                         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
                         *{{box-sizing:border-box;margin:0;padding:0}}
                         body{{background:transparent;font-family:"Inter",sans-serif}}
-                        .sw{{text-align:center;padding:1.05rem 0 0.65rem 0}}
+                        .sw{{text-align:center;padding:1rem 0 0.5rem 0}}
                         .sb{{font-size:3rem;font-weight:800;letter-spacing:-0.04em;
                             background:linear-gradient(135deg,#5A2D91,#2F6F73);
                             -webkit-background-clip:text;-webkit-text-fill-color:transparent;
                             background-clip:text;line-height:1.1}}
                         .sl{{font-size:0.88rem;color:#5E6F78;margin-top:0.3rem;font-weight:500}}
                         .st{{height:12px;border-radius:999px;background:rgba(157,176,183,0.16);
-                            margin:0.95rem auto 0;max-width:420px;overflow:hidden}}
+                            margin:0.9rem auto 0;max-width:420px;overflow:hidden}}
                         .sf{{height:100%;border-radius:999px;background:linear-gradient(90deg,#7C5C8F,#2F6F73);transition:width 0.6s ease}}
-                        .sm{{font-size:0.95rem;color:#4D5F69;margin-top:0.75rem;font-weight:500}}
+                        .sm{{font-size:0.95rem;color:#4D5F69;margin-top:0.7rem;font-weight:500}}
                     </style>
                     <div class="sw">
                         <div class="sb">{total_correct} / {total_qs}</div>
@@ -574,11 +548,11 @@ def render_quiz_tab() -> None:
                         <div class="sm">{msg}</div>
                     </div>
                     """,
-                    height=180,
+                    height=175,
                     scrolling=False,
                 )
             else:
                 st.write(
                     f"**{total_answered}** of **{total_qs}** questions answered "
-                    f"(**{total_correct}** correct so far). Complete all questions to see your final score."
+                    f"({total_correct} correct so far). Complete all questions to see your final score."
                 )

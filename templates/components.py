@@ -1,6 +1,12 @@
 import streamlit as st
 
 
+@st.cache_data
+def _read_css(path: str) -> str:
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
 def load_css(path: str = "assets/styles.css") -> None:
     """
     Load external CSS into Streamlit.
@@ -11,9 +17,7 @@ def load_css(path: str = "assets/styles.css") -> None:
         Path to the CSS file.
     """
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            css = f.read()
-
+        css = _read_css(path)
         st.markdown(
             f"<style>{css}</style>",
             unsafe_allow_html=True,

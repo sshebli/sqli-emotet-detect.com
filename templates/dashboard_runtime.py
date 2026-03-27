@@ -26,9 +26,9 @@ from templates.dashboard_config import (
 )
 
 
-def inject_home_card_assets() -> None:
+@st.cache_data
+def _build_home_card_css() -> str:
     css_variables = []
-
     for css_var_name, filename in HOME_CARD_ASSET_MAP.items():
         image_path = STATIC_DIR / filename
         if image_path.exists():
@@ -36,16 +36,14 @@ def inject_home_card_assets() -> None:
             css_variables.append(
                 f'--{css_var_name}: url("data:image/png;base64,{image_b64}");'
             )
+    return " ".join(css_variables)
 
-    if css_variables:
+
+def inject_home_card_assets() -> None:
+    css_vars = _build_home_card_css()
+    if css_vars:
         st.markdown(
-            dedent(f"""
-            <style>
-            :root {{
-                {' '.join(css_variables)}
-            }}
-            </style>
-            """).strip(),
+            f"<style>:root {{ {css_vars} }}</style>",
             unsafe_allow_html=True,
         )
 
@@ -59,126 +57,74 @@ def inject_tab_persistence(active_tab_key: str) -> None:
         <script>
         (function() {{
             const KEYS = {keys_json};
-            const ACTIVE_FROM_SERVER = {active_json};
-            const STORAGE_KEY = "dashboard_active_tab";
-            const MAX_RETRIES = 60;
-            const RETRY_MS = 120;
-
-            function safeParent() {{
-                return window.parent || window;
-            }}
-
-            function getUrl() {{
-                return new URL(safeParent().location.href);
-            }}
+            const ACTIVE = {active_json};
 
             function setUrlTab(key) {{
-                const parentWin = safeParent();
-                const url = getUrl();
+                const url = new URL(window.parent.location.href);
                 url.searchParams.set("tab", key);
-                parentWin.history.replaceState({{}}, "", url.toString());
-                try {{
-                    parentWin.localStorage.setItem(STORAGE_KEY, key);
-                }} catch (e) {{}}
-            }}
-
-            function getDesiredTab() {{
-                const url = getUrl();
-                const fromUrl = url.searchParams.get("tab");
-                if (fromUrl && KEYS.includes(fromUrl)) {{
-                    return fromUrl;
-                }}
-
-                try {{
-                    const fromStorage = safeParent().localStorage.getItem(STORAGE_KEY);
-                    if (fromStorage && KEYS.includes(fromStorage)) {{
-                        return fromStorage;
-                    }}
-                }} catch (e) {{}}
-
-                return ACTIVE_FROM_SERVER && KEYS.includes(ACTIVE_FROM_SERVER)
-                    ? ACTIVE_FROM_SERVER
-                    : "home";
+                window.parent.history.replaceState({{}}, "", url.toString());
             }}
 
             function getTabButtons() {{
-                return safeParent().document.querySelectorAll('button[data-baseweb="tab"]');
+                return window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
             }}
 
             function attachListeners() {{
                 const btns = getTabButtons();
-                if (!btns || !btns.length) return false;
-
                 btns.forEach((btn, i) => {{
                     if (btn.__tabPersistPatched) return;
                     btn.__tabPersistPatched = true;
 
-                    const key = KEYS[i] || "home";
-
                     btn.addEventListener("click", () => {{
+                        const key = KEYS[i] || "home";
                         setUrlTab(key);
                     }});
 
-                    btn.addEventListener("keydown", (event) => {{
-                        if (event.key === "Enter" || event.key === " ") {{
-                            setUrlTab(key);
-                        }}
+                    btn.addEventListener("mousedown", () => {{
+                        const key = KEYS[i] || "home";
+                        setUrlTab(key);
                     }});
                 }});
-
-                return true;
             }}
 
             function restoreActiveTab() {{
                 const btns = getTabButtons();
-                if (!btns || !btns.length) return false;
+                const idx = KEYS.indexOf(ACTIVE);
+                if (idx >= 0 && btns[idx]) {{
+                    const isSelected =
+                        btns[idx].getAttribute("aria-selected") === "true" ||
+                        btns[idx].dataset.tabRestored === "true";
 
-                const desired = getDesiredTab();
-                const idx = KEYS.indexOf(desired);
-
-                if (idx < 0 || !btns[idx]) return false;
-
-                setUrlTab(desired);
-
-                if (btns[idx].getAttribute("aria-selected") !== "true") {{
-                    btns[idx].click();
-                }}
-
-                return true;
-            }}
-
-            function initWithRetry(attempt) {{
-                const attached = attachListeners();
-                const restored = restoreActiveTab();
-
-                if (attached && restored) return;
-
-                if (attempt < MAX_RETRIES) {{
-                    setTimeout(() => initWithRetry(attempt + 1), RETRY_MS);
+                    if (!isSelected) {{
+                        btns[idx].dataset.tabRestored = "true";
+                        btns[idx].click();
+                    }}
                 }}
             }}
+
+            function init() {{
+                attachListeners();
+                restoreActiveTab();
+            }}
+
+            init();
 
             const observer = new MutationObserver(() => {{
                 attachListeners();
+                restoreActiveTab();
             }});
 
-            function startObserver() {{
-                const body = safeParent().document.body;
-                if (body) {{
-                    observer.observe(body, {{ childList: true, subtree: true }});
-                }}
-            }}
-
-            setTimeout(() => {{
-                startObserver();
-                initWithRetry(0);
-            }}, 100);
+            observer.observe(window.parent.document.body, {{
+                childList: true,
+                subtree: true
+            }});
         }})();
         </script>
         """,
         height=0,
         width=0,
     )
+
 
 @st.cache_resource
 def load_model():

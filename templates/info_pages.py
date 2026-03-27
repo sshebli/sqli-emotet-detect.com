@@ -202,35 +202,6 @@ def render_emotet_info_page(go_home_fn: VoidFn) -> None:
 # ═══════════════════════════════════════════════════════════════
 # RELATIONSHIP PAGE
 # ═══════════════════════════════════════════════════════════════
-def render_relationship_info_page(go_home_fn: VoidFn) -> None:
-    render_back_home_button(go_home_fn)
-    render_page_title("Relationship Between SQLi and Emotet")
-
-    with st.container(border=True, key="rs_one"):
-        render_info_box_title("Multi-Stage Attack Context")
-        st.write("Modern cyber attacks rarely occur as a single isolated event. Instead, they often unfold as multi-stage attack chains, where attackers move through different layers of a system before achieving their objective. Each stage serves a different purpose — initial access, privilege escalation, persistence, lateral movement, and data exfiltration — and each produces different observable indicators.")
-        st.write("In this project, SQL injection and Emotet represent two distinct stages of potential compromise occurring at different layers of the attack lifecycle. SQL injection targets the application layer as an initial entry point, while Emotet represents a later-stage network-level threat that maintains persistent access and enables further exploitation.")
-
-    col_left, col_mid, col_right = st.columns([0.9, 1.1, 1.35], gap="large")
-
-    with col_left:
-        with st.container(border=True, key="rs_two", height=350):
-            render_info_box_title("1. SQLi as an Earlier Stage")
-            st.write("SQL injection operates at the application layer, where attackers manipulate web inputs to alter database queries. A successful SQL injection attack can allow attackers to access sensitive database information, retrieve administrative credentials, escalate privileges, or establish a foothold inside the system.")
-            st.write("This makes SQL injection a common starting point in broader attack campaigns. Once attackers gain access to internal systems through a vulnerable web application, the attack can progress beyond the application layer into deeper stages involving malware deployment and network-level activity.")
-
-    with col_mid:
-        with st.container(border=True, key="rs_three", height=350):
-            render_info_box_title("2. Emotet as a Later Behavioural Stage")
-            st.write("Emotet represents a later stage in the attack chain, where compromised machines begin communicating with external command-and-control infrastructure and exhibiting abnormal network traffic patterns. At this stage, the attacker has already established access and is now focused on maintaining persistence, downloading additional tools, and expanding control.")
-            st.write("Although SQL injection and Emotet operate at different layers of a system, a successful SQL injection attack can serve as the initial compromise vector that enables later malware deployment. For example, an attacker who gains sufficient database privileges through SQL injection may leverage stored procedures or command execution capabilities to download and execute malware on the compromised server, which could then exhibit Emotet-like C2 behaviour.")
-
-    with col_right:
-        with st.container(border=True, key="rs_four", height=350):
-            render_info_box_title("3. How SQLi Can Progress Toward Malware Deployment")
-            st.write("The transition from application-layer exploitation to network-level compromise follows a recognisable pattern. When attackers exploit a vulnerable web application through SQL injection, they may initially gain access to sensitive database information, administrative credentials, or internal system functionality.")
-            st.write("In more severe cases, attackers can leverage database features such as stored procedures or command execution capabilities to interact with the underlying operating system. For example, certain database systems support extended stored procedures that allow the execution of system commands. If an attacker gains sufficient privileges through SQL injection, they may use these mechanisms to download and execute external malware on the compromised server.")
-            st.write("This represents the bridge between the two attack types covered in this project: what begins as payload manipulation at the application layer can escalate into host-level compromise and network-level malware behaviour.")
 
 # ═══════════════════════════════════════════════════════════════
 # RELATIONSHIP PAGE
@@ -258,7 +229,7 @@ def render_relationship_info_page(go_home_fn: VoidFn) -> None:
     col_left, col_mid, col_right = st.columns([0.9, 1.1, 1.35], gap="large")
 
     with col_left:
-        with st.container(border=True, key="rs_two", height=350):
+        with st.container(border=True, key="rs_two"):
             render_info_box_title("1. SQLi as an Initial Access Stage")
             st.write(
                 "SQL injection operates at the application layer, where attackers manipulate web "
@@ -274,7 +245,7 @@ def render_relationship_info_page(go_home_fn: VoidFn) -> None:
             )
 
     with col_mid:
-        with st.container(border=True, key="rs_three", height=350):
+        with st.container(border=True, key="rs_three"):
             render_info_box_title("2. Emotet as a Post-Compromise Behavioural Stage")
             st.write(
                 "Emotet represents a later-stage behavioural threat in which compromised hosts begin "
@@ -291,7 +262,7 @@ def render_relationship_info_page(go_home_fn: VoidFn) -> None:
             )
 
     with col_right:
-        with st.container(border=True, key="rs_four", height=350):
+        with st.container(border=True, key="rs_four"):
             render_info_box_title("3. How SQLi Can Progress Toward Malware Deployment")
             st.write(
                 "The transition from application-layer exploitation to network-level compromise "

@@ -38,7 +38,11 @@ from templates.helpers import (
 from templates.ui_renderers import render_dashboard_hero
 
 
-st.set_page_config(page_title="Dissertation ML Pipeline Dashboard", layout="wide")
+st.set_page_config(
+    page_title="SQLi & Emotet Detection Dashboard",
+    page_icon="🛡️",
+    layout="wide",
+)
 load_css()
 inject_home_card_assets()
 
@@ -52,15 +56,35 @@ unified_model = load_unified_model()
 unified_features = load_unified_features()
 unified_importance = load_unified_importance()
 
-schema_map = {item["feature"]: item for item in schema}
-defaults = {item["feature"]: float(item["default"]) for item in schema}
 
-SQLI_FEATURES = list(feature_names)
-EMOTET_FEATURES = [
-    feature
-    for feature in unified_features
-    if feature not in SQLI_FEATURES and feature not in ["y", "group_id"]
-]
+@st.cache_data
+def _build_schema_map(_schema: tuple) -> dict:
+    return {item["feature"]: item for item in _schema}
+
+
+@st.cache_data
+def _build_defaults(_schema: tuple) -> dict:
+    return {item["feature"]: float(item["default"]) for item in _schema}
+
+
+@st.cache_data
+def _build_feature_lists(
+    _feature_names: tuple, _unified_features: tuple
+) -> tuple:
+    sqli = list(_feature_names)
+    emotet = [
+        f for f in _unified_features
+        if f not in sqli and f not in ["y", "group_id"]
+    ]
+    return sqli, emotet
+
+
+# Convert lists to tuples so st.cache_data can hash them
+schema_map = _build_schema_map(tuple(schema))
+defaults = _build_defaults(tuple(schema))
+SQLI_FEATURES, EMOTET_FEATURES = _build_feature_lists(
+    tuple(feature_names), tuple(unified_features)
+)
 
 initialize_session_state(defaults)
 ensure_unified_presets_initialized(defaults, SQLI_FEATURES)

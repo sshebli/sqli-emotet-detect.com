@@ -15,33 +15,33 @@ body{background:transparent;font-family:"Inter","Segoe UI",sans-serif;-webkit-fo
 EMOTET_STAGES_HTML = """
 <div class="emotet-flow enhanced-flow">
     <div class="flow-step">
-        <div class="flow-icon">📧</div>
+        <div class="flow-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#5A4878" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg></div>
         <div class="flow-title">1. Phishing Email</div>
-        <div class="flow-desc">Victim receives a legitimate-looking email</div>
+        <div class="flow-desc">User receives a legitimate-looking email</div>
     </div>
-    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow">→</div></div>
+    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow">&rarr;</div></div>
     <div class="flow-step">
-        <div class="flow-icon">📄</div>
+        <div class="flow-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#5A4878" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
         <div class="flow-title">2. Malicious Attachment</div>
-        <div class="flow-desc">User opens the attachment and enables macros</div>
+        <div class="flow-desc">User opens file and enables macros</div>
     </div>
-    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow">→</div></div>
+    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow">&rarr;</div></div>
     <div class="flow-step">
-        <div class="flow-icon">🌐</div>
+        <div class="flow-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#5A4878" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
         <div class="flow-title">3. C2 Communication</div>
-        <div class="flow-desc">Infected host establishes outbound contact with attacker servers</div>
+        <div class="flow-desc">Infected host connects to attacker servers</div>
     </div>
-    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow">→</div></div>
+    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow">&rarr;</div></div>
     <div class="flow-step">
-        <div class="flow-icon">📡</div>
+        <div class="flow-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#5A4878" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg></div>
         <div class="flow-title">4. Beaconing</div>
-        <div class="flow-desc">Periodic low-volume check-ins with external infrastructure</div>
+        <div class="flow-desc">Periodic check-ins with external infrastructure</div>
     </div>
-    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow">→</div></div>
+    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow">&rarr;</div></div>
     <div class="flow-step">
-        <div class="flow-icon">🕸️</div>
+        <div class="flow-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#5A4878" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
         <div class="flow-title">5. Botnet Expansion</div>
-        <div class="flow-desc">Downloads additional payloads and supports further malicious activity</div>
+        <div class="flow-desc">Downloads payloads and spreads infection</div>
     </div>
 </div>
 """
@@ -145,25 +145,25 @@ PROGRESSION_HTML = (
         <div class="prog-card prog-card-1">
             <div class="prog-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20l4-16m2 16l4-16"/><path d="M3 8h18M3 16h18"/></svg></div>
             <div class="prog-card-title">SQLi Entry</div>
-            <div class="prog-card-text">The attacker identifies a vulnerable input field and injects malicious SQL to test whether the backend can be manipulated.</div>
+            <div class="prog-card-text">The attacker identifies an unsanitised input field and injects malicious SQL to test whether the backend is exploitable.</div>
         </div>
         <div class="prog-conn"><div class="prog-conn-track"></div><span class="prog-conn-chevron">›</span></div>
         <div class="prog-card prog-card-2">
             <div class="prog-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg></div>
             <div class="prog-card-title">DB Access &amp; Privilege Escalation</div>
-            <div class="prog-card-text">Successful injection provides database access and may allow privilege escalation toward broader system control.</div>
+            <div class="prog-card-text">Successful injection grants database access. The attacker escalates privileges for broader system control.</div>
         </div>
         <div class="prog-conn"><div class="prog-conn-track"></div><span class="prog-conn-chevron">›</span></div>
         <div class="prog-card prog-card-3">
             <div class="prog-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 12l4-4M6 12l4 4"/><path d="M14 16h4"/></svg></div>
             <div class="prog-card-title">OS Command Execution</div>
-            <div class="prog-card-text">System-level command execution bridges the transition from application-layer compromise to host-level control.</div>
+            <div class="prog-card-text">System-level command execution bridges the transition from web-layer compromise to host-level control.</div>
         </div>
         <div class="prog-conn"><div class="prog-conn-track"></div><span class="prog-conn-chevron">›</span></div>
         <div class="prog-card prog-card-4">
             <div class="prog-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
             <div class="prog-card-title">Malware Execution</div>
-            <div class="prog-card-text">External malware is downloaded and executed on the compromised server, creating a persistent foothold.</div>
+            <div class="prog-card-text">External malware is downloaded and executed on the compromised server, establishing a persistent foothold.</div>
         </div>
         <div class="prog-conn"><div class="prog-conn-track"></div><span class="prog-conn-chevron">›</span></div>
         <div class="prog-card prog-card-5">
@@ -191,7 +191,7 @@ DATASET_CARDS_HTML = (
         border:1px solid rgba(138,112,184,0.28);box-shadow:0 5px 14px rgba(92,72,125,0.07)}
     .ds-label{font-size:0.64rem;font-weight:700;color:#6C5A7E;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.1rem}
     .ds-value{font-size:1.4rem;font-weight:800;color:#3D2B5A;letter-spacing:-0.03em;line-height:1.1;font-variant-numeric:tabular-nums}
-    .ds-sub{font-size:0.7rem;color:#493F57;margin-top:0.05rem;line-height:1.25}
+    .ds-sub{font-size:0.7rem;color:#7A6B8E;margin-top:0.05rem;line-height:1.25}
     .ds-detail{font-size:0.68rem;color:#5E6F78;line-height:1.3;margin-top:0.25rem}
 </style>
 <div class="ds-row">
@@ -208,9 +208,9 @@ DATASET_CARDS_HTML = (
         <div class="ds-detail">5 infection traces + Stratosphere normals</div>
     </div>
     <div class="ds-card">
-        <div class="ds-label">External Validation — Zenodo</div>
+        <div class="ds-label">External — Zenodo</div>
         <div class="ds-value">20,000</div>
-        <div class="ds-sub">held-out SQLi evaluation</div>
+        <div class="ds-sub">held-out validation</div>
         <div class="ds-detail">10k benign · 10k malicious (never trained)</div>
     </div>
 </div>
@@ -233,7 +233,7 @@ DISTRIBUTION_BAR_HTML = (
 <div class="dist-bar">
     <div class="dist-seg dist-seg-normal">Normal 65%</div>
     <div class="dist-seg dist-seg-sqli">SQLi 33%</div>
-    <div class="dist-seg dist-seg-emotet">1.6%</div>
+    <div class="dist-seg dist-seg-emotet">2%</div>
 </div>
 <div class="dist-legend">
     <div class="dist-legend-item"><div class="dist-dot" style="background:#8B9DA6"></div>Normal (22,358)</div>
@@ -260,7 +260,7 @@ FEATURE_CHIPS_HTML = (
     .fe-desc{font-size:0.86rem;color:#5E6F78;line-height:1.4;margin-top:0.3rem}
 </style>
 <div class="fe-section">
-    <div class="fe-heading">SQLi Features <span class="fe-count fe-count-sqli">9 structural</span></div>
+    <div class="fe-heading">SQLi Features <span class="fe-count fe-count-sqli">9 lexical</span></div>
     <div class="fe-chips">
         <span class="fe-chip fe-chip-sqli">Sentence Length</span>
         <span class="fe-chip fe-chip-sqli">AND Count</span>
@@ -317,7 +317,7 @@ MODEL_COMPARISON_HTML = (
     .mc-loser .mc-badge{background:rgba(140,140,150,0.10);color:#787480;border:1px solid rgba(140,140,150,0.16)}
     .mc-name{font-size:0.95rem;font-weight:800;color:#2E3A42;letter-spacing:-0.02em}
     .mc-metrics{display:flex;gap:1rem}
-    .mc-ml{font-size:0.56rem;font-weight:700;color:#25282C;text-transform:uppercase;letter-spacing:0.04em}
+    .mc-ml{font-size:0.56rem;font-weight:600;color:#8A96A0;text-transform:uppercase;letter-spacing:0.04em}
     .mc-mv{font-size:1rem;font-weight:800;color:#2E3A42;font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
     .mc-loser .mc-mv{color:#787480}
 </style>
@@ -368,13 +368,13 @@ VALIDATION_CARDS_HTML = (
     .vc::before{content:"";position:absolute;top:0;left:0;right:0;height:2.5px;background:linear-gradient(90deg,rgba(124,92,143,0.42),rgba(47,111,115,0.32))}
     .vc-icon{width:1.7rem;height:1.7rem;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:0.32rem;background:linear-gradient(135deg,rgba(124,92,143,0.11),rgba(47,111,115,0.07));border:1px solid rgba(124,92,143,0.14)}
     .vc-icon svg{width:0.85rem;height:0.85rem;stroke:#5A4878;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-    .vc-title{font-size:0.98rem;font-weight:700;color:#2E3A42;margin-bottom:0.12rem;line-height:1.2}
-    .vc-desc{font-size:0.9rem;color:#374247;line-height:1.35}
+    .vc-title{font-size:0.95rem;font-weight:700;color:#2E3A42;margin-bottom:0.12rem;line-height:1.2}
+    .vc-desc{font-size:0.85rem;color:#5E6F78;line-height:1.35}
 </style>
 <div class="vg">
     <div class="vc"><div class="vc-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 12h16"/><path d="M12 4v16"/></svg></div><div class="vc-title">5-Fold Stratified CV</div><div class="vc-desc">Stability across data partitions</div></div>
     <div class="vc"><div class="vc-icon"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg></div><div class="vc-title">Train-Test Gap</div><div class="vc-desc">Overfitting measurement</div></div>
-    <div class="vc"><div class="vc-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><div class="vc-title">Group-Aware Holdout</div><div class="vc-desc">Prevent capture-level leakage</div></div>
+    <div class="vc"><div class="vc-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><div class="vc-title">Group-Aware Holdout</div><div class="vc-desc">Prevent Emotet data leakage</div></div>
     <div class="vc"><div class="vc-icon"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-6.22-8.56"/><path d="M21 3v6h-6"/></svg></div><div class="vc-title">External Validation</div><div class="vc-desc">Independent Zenodo test set</div></div>
     <div class="vc"><div class="vc-icon"><svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-6"/><path d="M21 3l-9 9"/><path d="M3 3l9 9"/></svg></div><div class="vc-title">Model Comparison</div><div class="vc-desc">RF vs LR vs Decision Tree</div></div>
     <div class="vc"><div class="vc-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="vc-title">Permutation Importance</div><div class="vc-desc">No spurious feature shortcuts</div></div>
