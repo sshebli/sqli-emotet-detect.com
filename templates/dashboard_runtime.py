@@ -5,7 +5,6 @@ import os
 import joblib
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 
 from templates.dashboard_config import (
     EMOTET_DEMO_PRESET,
@@ -17,7 +16,6 @@ from templates.dashboard_config import (
     SCHEMA_PATH,
     SQLI_DEMO_PRESET,
     STATIC_DIR,
-    TAB_KEYS,
     UNIFIED_EMOTET_CONFIG,
     UNIFIED_FEATURES_PATH,
     UNIFIED_IMPORTANCE_PATH,
@@ -47,158 +45,14 @@ def inject_home_card_assets() -> None:
         )
 
 
-def get_active_tab_key() -> str:
-    requested_tab = st.query_params.get("tab", "home")
-    if requested_tab in TAB_KEYS:
-        return requested_tab
-    return "home"
-
-
-def sync_tab_query_param(active_tab_key: str) -> None:
-    current_tab = st.query_params.get("tab")
-    if current_tab != active_tab_key:
-        st.query_params["tab"] = active_tab_key
-
-
 def inject_tab_persistence(active_tab_key: str) -> None:
-    keys_json = json.dumps(TAB_KEYS)
-    active_json = json.dumps(active_tab_key)
+    """
+    Kept for compatibility with app.py.
 
-    components.html(
-        f"""
-        <script>
-        (function() {{
-            const KEYS = {keys_json};
-            const ACTIVE = {active_json};
-
-            function getParentWindow() {{
-                return window.parent || window;
-            }}
-
-            function getUrl() {{
-                return new URL(getParentWindow().location.href);
-            }}
-
-            function setUrlTab(key) {{
-                if (!KEYS.includes(key)) {{
-                    key = "home";
-                }}
-                const url = getUrl();
-                if (url.searchParams.get("tab") !== key) {{
-                    url.searchParams.set("tab", key);
-                    getParentWindow().history.replaceState({{}}, "", url.toString());
-                }}
-            }}
-
-            function getTabButtons() {{
-                return getParentWindow().document.querySelectorAll('button[data-baseweb="tab"]');
-            }}
-
-            function getSelectedIndex() {{
-                const btns = getTabButtons();
-                for (let i = 0; i < btns.length; i += 1) {{
-                    if (btns[i].getAttribute("aria-selected") === "true") {{
-                        return i;
-                    }}
-                }}
-                return -1;
-            }}
-
-            function getDesiredKey() {{
-                const url = getUrl();
-                const fromUrl = url.searchParams.get("tab");
-                if (KEYS.includes(fromUrl)) {{
-                    return fromUrl;
-                }}
-                return KEYS.includes(ACTIVE) ? ACTIVE : "home";
-            }}
-
-            function attachListeners() {{
-                const btns = getTabButtons();
-                btns.forEach((btn, i) => {{
-                    if (btn.__tabPersistPatched) return;
-                    btn.__tabPersistPatched = true;
-
-                    const syncKey = () => {{
-                        const key = KEYS[i] || "home";
-                        setUrlTab(key);
-                    }};
-
-                    btn.addEventListener("mousedown", syncKey, true);
-                    btn.addEventListener("click", syncKey, true);
-                }});
-            }}
-
-            function restoreActiveTab() {{
-                const btns = getTabButtons();
-                if (!btns || btns.length !== KEYS.length) {{
-                    return false;
-                }}
-
-                const desiredKey = getDesiredKey();
-                const idx = KEYS.indexOf(desiredKey);
-                if (idx < 0 || !btns[idx]) {{
-                    return false;
-                }}
-
-                setUrlTab(desiredKey);
-
-                const alreadySelected =
-                    btns[idx].getAttribute("aria-selected") === "true";
-
-                if (!alreadySelected) {{
-                    btns[idx].dispatchEvent(
-                        new MouseEvent("mousedown", {{
-                            bubbles: true,
-                            cancelable: true,
-                            view: getParentWindow(),
-                        }})
-                    );
-                    btns[idx].click();
-                }}
-
-                return true;
-            }}
-
-            function syncFromSelectedTab() {{
-                const idx = getSelectedIndex();
-                if (idx >= 0) {{
-                    const key = KEYS[idx] || "home";
-                    setUrlTab(key);
-                }}
-            }}
-
-            function init() {{
-                attachListeners();
-                restoreActiveTab();
-                syncFromSelectedTab();
-            }}
-
-            init();
-
-            const observer = new MutationObserver(() => {{
-                attachListeners();
-                restoreActiveTab();
-                syncFromSelectedTab();
-            }});
-
-            observer.observe(getParentWindow().document.body, {{
-                childList: true,
-                subtree: true,
-                attributes: true,
-                attributeFilter: ["aria-selected"]
-            }});
-
-            getParentWindow().addEventListener("popstate", () => {{
-                restoreActiveTab();
-                syncFromSelectedTab();
-            }});
-        }})();
-        </script>
-        """,
-        height=0,
-        width=0,
-    )
+    Tab persistence is now handled natively inside dashboard_tabs.py
+    using Streamlit tab state rather than fragile browser-side JS.
+    """
+    return None
 
 
 @st.cache_resource
@@ -216,7 +70,9 @@ def load_schema():
 @st.cache_data
 def load_importance():
     if os.path.exists(IMPORTANCE_PATH):
-        return pd.read_csv(IMPORTANCE_PATH).sort_values("importance", ascending=False)
+        return pd.read_csv(IMPORTANCE_PATH).sort_values(
+            "importance", ascending=False
+        )
     return None
 
 
@@ -234,7 +90,9 @@ def load_unified_features():
 @st.cache_data
 def load_unified_importance():
     if os.path.exists(UNIFIED_IMPORTANCE_PATH):
-        return pd.read_csv(UNIFIED_IMPORTANCE_PATH).sort_values("importance", ascending=False)
+        return pd.read_csv(UNIFIED_IMPORTANCE_PATH).sort_values(
+            "importance", ascending=False
+        )
     return None
 
 

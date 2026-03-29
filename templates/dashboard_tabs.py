@@ -27,14 +27,25 @@ from templates.ui_renderers import (
     render_sqli_info_page,
 )
 
+MAIN_TABS_STATE_KEY = "main_tabs"
+
+
+def _sync_main_tab_to_query_params(TAB_NAMES, TAB_KEYS) -> None:
+    selected_label = st.session_state.get(MAIN_TABS_STATE_KEY, TAB_NAMES[0])
+    label_to_key = dict(zip(TAB_NAMES, TAB_KEYS))
+    selected_key = label_to_key.get(selected_label, TAB_KEYS[0])
+    st.query_params["tab"] = selected_key
+
 
 def render_page_title(title: str) -> None:
     st.markdown(
-        dedent(f"""
+        dedent(
+            f"""
         <div class="page-title-wrap">
             <h1 class="page-title">{title}</h1>
         </div>
-        """).strip(),
+        """
+        ).strip(),
         unsafe_allow_html=True,
     )
 
@@ -221,7 +232,19 @@ def render_main_tabs(
     pretty_feature_group_fn,
     go_home,
 ):
-    tabs = st.tabs(TAB_NAMES)
+    key_to_label = dict(zip(TAB_KEYS, TAB_NAMES))
+    desired_label = key_to_label.get(active_tab_key, TAB_NAMES[0])
+
+    current_label = st.session_state.get(MAIN_TABS_STATE_KEY)
+    if current_label != desired_label:
+        st.session_state[MAIN_TABS_STATE_KEY] = desired_label
+
+    tabs = st.tabs(
+        TAB_NAMES,
+        key=MAIN_TABS_STATE_KEY,
+        on_change=_sync_main_tab_to_query_params,
+        args=(TAB_NAMES, TAB_KEYS),
+    )
     tab_home, tab_unified, tab_pipeline, tab_explain, tab_quiz = tabs
 
     inject_tab_persistence_fn(active_tab_key)
