@@ -27,40 +27,14 @@ from templates.ui_renderers import (
     render_sqli_info_page,
 )
 
-MAIN_NAV_KEY = "main_nav_selection"
-
-
-def _sync_nav_to_query(TAB_NAMES, TAB_KEYS) -> str:
-    key_to_name = dict(zip(TAB_KEYS, TAB_NAMES))
-    name_to_key = dict(zip(TAB_NAMES, TAB_KEYS))
-
-    requested_key = st.query_params.get("tab", "home")
-    default_name = key_to_name.get(requested_key, TAB_NAMES[0])
-
-    if MAIN_NAV_KEY not in st.session_state:
-        st.session_state[MAIN_NAV_KEY] = default_name
-
-    current_name = st.session_state.get(MAIN_NAV_KEY, default_name)
-    if requested_key in key_to_name and current_name != key_to_name[requested_key]:
-        st.session_state[MAIN_NAV_KEY] = key_to_name[requested_key]
-        current_name = st.session_state[MAIN_NAV_KEY]
-
-    selected_key = name_to_key.get(current_name, TAB_KEYS[0])
-    if st.query_params.get("tab", None) != selected_key:
-        st.query_params["tab"] = selected_key
-
-    return current_name
-
 
 def render_page_title(title: str) -> None:
     st.markdown(
-        dedent(
-            f"""
+        dedent(f"""
         <div class="page-title-wrap">
             <h1 class="page-title">{title}</h1>
         </div>
-        """
-        ).strip(),
+        """).strip(),
         unsafe_allow_html=True,
     )
 
@@ -247,38 +221,28 @@ def render_main_tabs(
     pretty_feature_group_fn,
     go_home,
 ):
-    selected_name = _sync_nav_to_query(TAB_NAMES, TAB_KEYS)
+    tabs = st.tabs(TAB_NAMES)
+    tab_home, tab_unified, tab_pipeline, tab_explain, tab_quiz = tabs
 
-    st.radio(
-        label="Main navigation",
-        options=TAB_NAMES,
-        key=MAIN_NAV_KEY,
-        horizontal=True,
-        label_visibility="collapsed",
-    )
+    inject_tab_persistence_fn(active_tab_key)
 
-    name_to_key = dict(zip(TAB_NAMES, TAB_KEYS))
-    selected_name = st.session_state.get(MAIN_NAV_KEY, selected_name)
-    selected_key = name_to_key.get(selected_name, TAB_KEYS[0])
-
-    if st.query_params.get("tab", None) != selected_key:
-        st.query_params["tab"] = selected_key
-
-    if selected_key == "home":
+    with tab_home:
         render_home_tab_fn()
-    elif selected_key == "unified":
+
+    with tab_unified:
         render_unified_tab_fn()
-    elif selected_key == "pipeline":
+
+    with tab_pipeline:
         render_pipeline_info_page(go_home)
-    elif selected_key == "explain":
+
+    with tab_explain:
         with st.spinner("Loading explainability..."):
             render_explainability_tab(
                 importance=importance,
                 unified_importance=unified_importance,
                 pretty_feature_group_fn=pretty_feature_group_fn,
             )
-    elif selected_key == "quiz":
+
+    with tab_quiz:
         with st.spinner("Loading quiz..."):
             render_quiz_tab()
-    else:
-        render_home_tab_fn()
