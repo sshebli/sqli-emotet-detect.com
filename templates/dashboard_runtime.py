@@ -49,8 +49,8 @@ def inject_tab_persistence(active_tab_key: str) -> None:
     """
     Kept for compatibility with app.py.
 
-    Tab persistence is now handled natively inside dashboard_tabs.py
-    using Streamlit tab state rather than fragile browser-side JS.
+    Tab persistence is handled in dashboard_tabs.py using session state
+    and query params, not browser-side JS.
     """
     return None
 

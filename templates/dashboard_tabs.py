@@ -27,14 +27,22 @@ from templates.ui_renderers import (
     render_sqli_info_page,
 )
 
-MAIN_TABS_STATE_KEY = "main_tabs"
+MAIN_TAB_INDEX_KEY = "main_tab_index"
+TAB_QUERY_KEY = "tab"
 
 
-def _sync_main_tab_to_query_params(TAB_NAMES, TAB_KEYS) -> None:
-    selected_label = st.session_state.get(MAIN_TABS_STATE_KEY, TAB_NAMES[0])
-    label_to_key = dict(zip(TAB_NAMES, TAB_KEYS))
-    selected_key = label_to_key.get(selected_label, TAB_KEYS[0])
-    st.query_params["tab"] = selected_key
+def _get_tab_index_from_query(TAB_KEYS) -> int:
+    requested_tab = st.query_params.get(TAB_QUERY_KEY, "home")
+    if requested_tab in TAB_KEYS:
+        return TAB_KEYS.index(requested_tab)
+    return 0
+
+
+def _sync_query_from_index(TAB_KEYS) -> None:
+    idx = int(st.session_state.get(MAIN_TAB_INDEX_KEY, 0))
+    if idx < 0 or idx >= len(TAB_KEYS):
+        idx = 0
+    st.query_params[TAB_QUERY_KEY] = TAB_KEYS[idx]
 
 
 def render_page_title(title: str) -> None:
@@ -232,40 +240,72 @@ def render_main_tabs(
     pretty_feature_group_fn,
     go_home,
 ):
-    key_to_label = dict(zip(TAB_KEYS, TAB_NAMES))
-    desired_label = key_to_label.get(active_tab_key, TAB_NAMES[0])
+    if MAIN_TAB_INDEX_KEY not in st.session_state:
+        st.session_state[MAIN_TAB_INDEX_KEY] = _get_tab_index_from_query(TAB_KEYS)
 
-    current_label = st.session_state.get(MAIN_TABS_STATE_KEY)
-    if current_label != desired_label:
-        st.session_state[MAIN_TABS_STATE_KEY] = desired_label
+    requested_index = _get_tab_index_from_query(TAB_KEYS)
+    current_index = int(st.session_state.get(MAIN_TAB_INDEX_KEY, 0))
 
-    tabs = st.tabs(
-        TAB_NAMES,
-        key=MAIN_TABS_STATE_KEY,
-        on_change=_sync_main_tab_to_query_params,
-        args=(TAB_NAMES, TAB_KEYS),
-    )
+    if requested_index != current_index:
+        st.session_state[MAIN_TAB_INDEX_KEY] = requested_index
+
+    tabs = st.tabs(TAB_NAMES)
+    current_index = int(st.session_state.get(MAIN_TAB_INDEX_KEY, 0))
+
+    # Keep query param synced on every run.
+    _sync_query_from_index(TAB_KEYS)
+
+    for i, _ in enumerate(TAB_NAMES):
+        if st.button(
+            "",
+            key=f"tab_sync_btn_{i}",
+            help=None,
+            type="secondary",
+            use_container_width=False,
+        ):
+            st.session_state[MAIN_TAB_INDEX_KEY] = i
+            _sync_query_from_index(TAB_KEYS)
+
     tab_home, tab_unified, tab_pipeline, tab_explain, tab_quiz = tabs
 
-    inject_tab_persistence_fn(active_tab_key)
-
     with tab_home:
-        render_home_tab_fn()
+        if current_index == 0:
+            render_home_tab_fn()
+        else:
+            render_home_tab_fn()
 
     with tab_unified:
-        render_unified_tab_fn()
+        if current_index == 1:
+            render_unified_tab_fn()
+        else:
+            render_unified_tab_fn()
 
     with tab_pipeline:
-        render_pipeline_info_page(go_home)
+        if current_index == 2:
+            render_pipeline_info_page(go_home)
+        else:
+            render_pipeline_info_page(go_home)
 
     with tab_explain:
-        with st.spinner("Loading explainability..."):
-            render_explainability_tab(
-                importance=importance,
-                unified_importance=unified_importance,
-                pretty_feature_group_fn=pretty_feature_group_fn,
-            )
+        if current_index == 3:
+            with st.spinner("Loading explainability..."):
+                render_explainability_tab(
+                    importance=importance,
+                    unified_importance=unified_importance,
+                    pretty_feature_group_fn=pretty_feature_group_fn,
+                )
+        else:
+            with st.spinner("Loading explainability..."):
+                render_explainability_tab(
+                    importance=importance,
+                    unified_importance=unified_importance,
+                    pretty_feature_group_fn=pretty_feature_group_fn,
+                )
 
     with tab_quiz:
-        with st.spinner("Loading quiz..."):
-            render_quiz_tab()
+        if current_index == 4:
+            with st.spinner("Loading quiz..."):
+                render_quiz_tab()
+        else:
+            with st.spinner("Loading quiz..."):
+                render_quiz_tab()
