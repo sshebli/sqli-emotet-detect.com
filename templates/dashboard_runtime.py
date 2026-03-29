@@ -1,10 +1,12 @@
 import base64
 import json
 import os
+from textwrap import dedent
 
 import joblib
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 from templates.dashboard_config import (
     EMOTET_DEMO_PRESET,
@@ -16,6 +18,7 @@ from templates.dashboard_config import (
     SCHEMA_PATH,
     SQLI_DEMO_PRESET,
     STATIC_DIR,
+    TAB_KEYS,
     UNIFIED_EMOTET_CONFIG,
     UNIFIED_FEATURES_PATH,
     UNIFIED_IMPORTANCE_PATH,
@@ -46,13 +49,210 @@ def inject_home_card_assets() -> None:
 
 
 def inject_tab_persistence(active_tab_key: str) -> None:
-    """
-    Kept for compatibility with app.py.
+    keys_json = json.dumps(TAB_KEYS)
+    active_json = json.dumps(active_tab_key)
 
-    Tab persistence is handled in dashboard_tabs.py using session state
-    and query params, not browser-side JS.
-    """
-    return None
+    components.html(
+        dedent(
+            f"""
+            <script>
+            (function() {{
+                const TAB_KEYS = {keys_json};
+                const ACTIVE_KEY = {active_json};
+                const TAB_PARAM = "tab";
+                const MAX_TRIES = 120;
+
+                function getHostWindow() {{
+                    try {{
+                        if (window.parent && window.parent !== window) return window.parent;
+                    }} catch (e) {{}}
+                    try {{
+                        if (window.top && window.top !== window) return window.top;
+                    }} catch (e) {{}}
+                    return window;
+                }}
+
+                const HOST = getHostWindow();
+
+                function safeUrl() {{
+                    try {{
+                        return new URL(HOST.location.href);
+                    }} catch (e) {{
+                        return null;
+                    }}
+                }}
+
+                function readTabFromUrl() {{
+                    const url = safeUrl();
+                    if (!url) return null;
+                    const val = url.searchParams.get(TAB_PARAM);
+                    return TAB_KEYS.includes(val) ? val : null;
+                }}
+
+                function writeTabToUrl(tabKey) {{
+                    if (!TAB_KEYS.includes(tabKey)) return;
+                    const url = safeUrl();
+                    if (!url) return;
+                    if (url.searchParams.get(TAB_PARAM) === tabKey) return;
+
+                    url.searchParams.set(TAB_PARAM, tabKey);
+                    try {{
+                        HOST.history.replaceState({{}}, "", url.toString());
+                    }} catch (e) {{}}
+                }}
+
+                function getTabButtons() {{
+                    try {{
+                        const doc = HOST.document;
+
+                        let nodes = Array.from(doc.querySelectorAll('button[role="tab"]'));
+
+                        if (!nodes.length) {{
+                            nodes = Array.from(
+                                doc.querySelectorAll('[data-testid="stTabs"] button')
+                            );
+                        }}
+
+                        if (!nodes.length) {{
+                            nodes = Array.from(
+                                doc.querySelectorAll('div[role="tablist"] button')
+                            );
+                        }}
+
+                        return nodes.slice(0, TAB_KEYS.length);
+                    }} catch (e) {{
+                        return [];
+                    }}
+                }}
+
+                function getSelectedIndex(buttons) {{
+                    for (let i = 0; i < buttons.length; i += 1) {{
+                        const btn = buttons[i];
+                        const selected =
+                            btn.getAttribute("aria-selected") === "true" ||
+                            btn.getAttribute("data-selected") === "true";
+                        if (selected) return i;
+                    }}
+                    return -1;
+                }}
+
+                function attachListeners() {{
+                    const buttons = getTabButtons();
+                    if (!buttons.length) return false;
+
+                    buttons.forEach((btn, idx) => {{
+                        if (btn.__tabSyncBound) return;
+                        btn.__tabSyncBound = true;
+
+                        const sync = function() {{
+                            const key = TAB_KEYS[idx] || "home";
+                            window.setTimeout(() => {{
+                                writeTabToUrl(key);
+                            }}, 0);
+                        }};
+
+                        btn.addEventListener("click", sync, true);
+                        btn.addEventListener("mousedown", sync, true);
+                        btn.addEventListener("mouseup", sync, true);
+                        btn.addEventListener("touchend", sync, true);
+                        btn.addEventListener(
+                            "keydown",
+                            function(evt) {{
+                                if (evt.key === "Enter" || evt.key === " ") {{
+                                    sync();
+                                }}
+                            }},
+                            true
+                        );
+                    }});
+
+                    return true;
+                }}
+
+                function restoreTabFromUrlOrActive() {{
+                    const buttons = getTabButtons();
+                    if (!buttons.length) return false;
+
+                    const desiredKey = readTabFromUrl() || ACTIVE_KEY || "home";
+                    const targetIndex = TAB_KEYS.indexOf(desiredKey);
+                    if (targetIndex < 0 || !buttons[targetIndex]) return false;
+
+                    const selectedIndex = getSelectedIndex(buttons);
+
+                    if (selectedIndex !== targetIndex) {{
+                        try {{
+                            buttons[targetIndex].click();
+                        }} catch (e) {{}}
+                    }}
+
+                    writeTabToUrl(desiredKey);
+                    return true;
+                }}
+
+                function syncUrlFromSelectedTab() {{
+                    const buttons = getTabButtons();
+                    if (!buttons.length) return false;
+
+                    const selectedIndex = getSelectedIndex(buttons);
+                    if (selectedIndex < 0) return false;
+
+                    const key = TAB_KEYS[selectedIndex] || "home";
+                    writeTabToUrl(key);
+                    return true;
+                }}
+
+                let tries = 0;
+                let observer = null;
+
+                function tick() {{
+                    tries += 1;
+                    attachListeners();
+                    restoreTabFromUrlOrActive();
+                    syncUrlFromSelectedTab();
+
+                    if (tries >= MAX_TRIES && observer) {{
+                        observer.disconnect();
+                    }}
+                }}
+
+                function startObserver() {{
+                    try {{
+                        observer = new MutationObserver(() => {{
+                            attachListeners();
+                            syncUrlFromSelectedTab();
+                        }});
+
+                        observer.observe(HOST.document.body, {{
+                            childList: true,
+                            subtree: true,
+                            attributes: true,
+                            attributeFilter: ["aria-selected", "data-selected"]
+                        }});
+                    }} catch (e) {{}}
+                }}
+
+                tick();
+                startObserver();
+
+                const interval = window.setInterval(() => {{
+                    tick();
+                    if (tries >= MAX_TRIES) {{
+                        window.clearInterval(interval);
+                    }}
+                }}, 250);
+
+                try {{
+                    HOST.addEventListener("popstate", () => {{
+                        restoreTabFromUrlOrActive();
+                    }});
+                }} catch (e) {{}}
+            }})();
+            </script>
+            """
+        ),
+        height=0,
+        width=0,
+    )
 
 
 @st.cache_resource
