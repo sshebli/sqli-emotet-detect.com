@@ -232,6 +232,9 @@ def render_main_tabs(
     with tab_unified:
         render_unified_tab_fn()
 
+    with tab_pipeline:
+        render_pipeline_info_page(go_home)
+
     with tab_explain:
         with st.spinner("Loading explainability..."):
             render_explainability_tab(
@@ -239,9 +242,6 @@ def render_main_tabs(
                 unified_importance=unified_importance,
                 pretty_feature_group_fn=pretty_feature_group_fn,
             )
-
-    with tab_pipeline:
-        render_pipeline_info_page(go_home)
 
     with tab_quiz:
         with st.spinner("Loading quiz..."):

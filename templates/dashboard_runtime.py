@@ -1,7 +1,6 @@
 import base64
 import json
 import os
-from textwrap import dedent
 
 import joblib
 import pandas as pd
@@ -48,6 +47,19 @@ def inject_home_card_assets() -> None:
         )
 
 
+def get_active_tab_key() -> str:
+    requested_tab = st.query_params.get("tab", "home")
+    if requested_tab in TAB_KEYS:
+        return requested_tab
+    return "home"
+
+
+def sync_tab_query_param(active_tab_key: str) -> None:
+    current_tab = st.query_params.get("tab")
+    if current_tab != active_tab_key:
+        st.query_params["tab"] = active_tab_key
+
+
 def inject_tab_persistence(active_tab_key: str) -> None:
     keys_json = json.dumps(TAB_KEYS)
     active_json = json.dumps(active_tab_key)
@@ -59,14 +71,46 @@ def inject_tab_persistence(active_tab_key: str) -> None:
             const KEYS = {keys_json};
             const ACTIVE = {active_json};
 
+            function getParentWindow() {{
+                return window.parent || window;
+            }}
+
+            function getUrl() {{
+                return new URL(getParentWindow().location.href);
+            }}
+
             function setUrlTab(key) {{
-                const url = new URL(window.parent.location.href);
-                url.searchParams.set("tab", key);
-                window.parent.history.replaceState({{}}, "", url.toString());
+                if (!KEYS.includes(key)) {{
+                    key = "home";
+                }}
+                const url = getUrl();
+                if (url.searchParams.get("tab") !== key) {{
+                    url.searchParams.set("tab", key);
+                    getParentWindow().history.replaceState({{}}, "", url.toString());
+                }}
             }}
 
             function getTabButtons() {{
-                return window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
+                return getParentWindow().document.querySelectorAll('button[data-baseweb="tab"]');
+            }}
+
+            function getSelectedIndex() {{
+                const btns = getTabButtons();
+                for (let i = 0; i < btns.length; i += 1) {{
+                    if (btns[i].getAttribute("aria-selected") === "true") {{
+                        return i;
+                    }}
+                }}
+                return -1;
+            }}
+
+            function getDesiredKey() {{
+                const url = getUrl();
+                const fromUrl = url.searchParams.get("tab");
+                if (KEYS.includes(fromUrl)) {{
+                    return fromUrl;
+                }}
+                return KEYS.includes(ACTIVE) ? ACTIVE : "home";
             }}
 
             function attachListeners() {{
@@ -75,52 +119,79 @@ def inject_tab_persistence(active_tab_key: str) -> None:
                     if (btn.__tabPersistPatched) return;
                     btn.__tabPersistPatched = true;
 
-                    btn.addEventListener("click", () => {{
+                    const syncKey = () => {{
                         const key = KEYS[i] || "home";
                         setUrlTab(key);
-                    }});
+                    }};
 
-                    btn.addEventListener("mousedown", () => {{
-                        const key = KEYS[i] || "home";
-                        setUrlTab(key);
-                    }});
+                    btn.addEventListener("mousedown", syncKey, true);
+                    btn.addEventListener("click", syncKey, true);
                 }});
             }}
 
             function restoreActiveTab() {{
                 const btns = getTabButtons();
-                const idx = KEYS.indexOf(ACTIVE);
-                if (idx >= 0 && btns[idx]) {{
-                    const isSelected =
-                        btns[idx].getAttribute("aria-selected") === "true";
-                    if (!isSelected) {{
-                        btns[idx].click();
-                    }}
-                    return true;
+                if (!btns || btns.length !== KEYS.length) {{
+                    return false;
                 }}
-                return false;
+
+                const desiredKey = getDesiredKey();
+                const idx = KEYS.indexOf(desiredKey);
+                if (idx < 0 || !btns[idx]) {{
+                    return false;
+                }}
+
+                setUrlTab(desiredKey);
+
+                const alreadySelected =
+                    btns[idx].getAttribute("aria-selected") === "true";
+
+                if (!alreadySelected) {{
+                    btns[idx].dispatchEvent(
+                        new MouseEvent("mousedown", {{
+                            bubbles: true,
+                            cancelable: true,
+                            view: getParentWindow(),
+                        }})
+                    );
+                    btns[idx].click();
+                }}
+
+                return true;
+            }}
+
+            function syncFromSelectedTab() {{
+                const idx = getSelectedIndex();
+                if (idx >= 0) {{
+                    const key = KEYS[idx] || "home";
+                    setUrlTab(key);
+                }}
             }}
 
             function init() {{
                 attachListeners();
                 restoreActiveTab();
+                syncFromSelectedTab();
             }}
 
             init();
 
-            let restored = false;
             const observer = new MutationObserver(() => {{
                 attachListeners();
-                if (!restored) {{
-                    if (restoreActiveTab()) {{
-                        restored = true;
-                    }}
-                }}
+                restoreActiveTab();
+                syncFromSelectedTab();
             }});
 
-            observer.observe(window.parent.document.body, {{
+            observer.observe(getParentWindow().document.body, {{
                 childList: true,
-                subtree: true
+                subtree: true,
+                attributes: true,
+                attributeFilter: ["aria-selected"]
+            }});
+
+            getParentWindow().addEventListener("popstate", () => {{
+                restoreActiveTab();
+                syncFromSelectedTab();
             }});
         }})();
         </script>
@@ -128,6 +199,7 @@ def inject_tab_persistence(active_tab_key: str) -> None:
         height=0,
         width=0,
     )
+
 
 @st.cache_resource
 def load_model():

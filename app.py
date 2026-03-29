@@ -9,6 +9,7 @@ from templates.dashboard_config import (
 )
 from templates.dashboard_runtime import (
     ensure_unified_presets_initialized,
+    get_active_tab_key,
     get_unified_prediction_panel_height,
     go_home,
     go_page,
@@ -23,6 +24,7 @@ from templates.dashboard_runtime import (
     load_unified_model,
     reset_to_defaults,
     reset_unified_defaults,
+    sync_tab_query_param,
 )
 from templates.dashboard_tabs import (
     render_home_tab,
@@ -79,7 +81,6 @@ def _build_feature_lists(
     return sqli, emotet
 
 
-# Convert lists to tuples
 schema_map = _build_schema_map(tuple(schema))
 defaults = _build_defaults(tuple(schema))
 SQLI_FEATURES, EMOTET_FEATURES = _build_feature_lists(
@@ -89,8 +90,8 @@ SQLI_FEATURES, EMOTET_FEATURES = _build_feature_lists(
 initialize_session_state(defaults)
 ensure_unified_presets_initialized(defaults, SQLI_FEATURES)
 
-requested_tab = st.query_params.get("tab", "home")
-active_tab_key = requested_tab if requested_tab in TAB_KEYS else "home"
+active_tab_key = get_active_tab_key()
+sync_tab_query_param(active_tab_key)
 
 
 def _reset_to_defaults() -> None:
@@ -103,6 +104,7 @@ def _reset_unified_defaults() -> None:
 
 def _apply_unified_mode_presets() -> None:
     from templates.dashboard_runtime import apply_unified_mode_presets
+
     apply_unified_mode_presets(defaults, SQLI_FEATURES)
 
 
